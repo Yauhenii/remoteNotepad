@@ -14,7 +14,7 @@ public class Main {
         try {
             Client client = new Client(InetAddress.getByName(remoteAddressString),remotePort,InetAddress.getByName(addressString),port);
             client.start();
-        } catch (UnknownHostException exception){
+        } catch (Exception exception){
             System.out.println(exception.getMessage());
         }
     }

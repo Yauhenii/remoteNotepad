@@ -17,51 +17,55 @@ public class ServerThread extends Thread {
 
     private Socket clientSocket;
     private String clientAddress;
-    private BufferedReader bufferedReader;
-    private BufferedWriter bufferedWriter;
-    private OutputStream outputStream;
+    private BufferedReader bufferedReader; //Read text
+    private OutputStream outputStream; //Write bytes
+//    private BufferedWriter bufferedWriter;
+
 
     public ServerThread(Socket clientSocket) throws IOException {
         this.clientSocket = clientSocket;
         clientAddress = clientSocket.getInetAddress().getHostAddress();
         bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        bufferedWriter = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
         outputStream = clientSocket.getOutputStream();
+//        bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
         start();
     }
 
     @Override
     public void run() {
-        System.out.println(clientAddress + ": " + "connection established");
+        System.out.println("LOG: "+ clientAddress + ": CONNECTION ESTABLISHED");
         try {
             while (true) {
-                //Read file name
-                String text = bufferedReader.readLine();
-                System.out.println(clientAddress + ": " + text);
-                //Read file
-                File file = new File(text);
-                FileInputStream fileInputStream = new FileInputStream(file);
-                BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
-                //Read bytes
-                byte[] bytes = new byte[(int) file.length()];
-                bufferedInputStream.read(bytes, 0, bytes.length);
-                //Send file
-                System.out.println(clientAddress + ": sending " + text);
-                outputStream.write(bytes,0,bytes.length);
-                outputStream.flush();
-
-//                bufferedWriter.write(text + "\n");
-//                bufferedWriter.flush();
-
-                if (text.equals(endMessage)) {
-                    System.out.println(clientAddress + ": " + "connection aborted");
+                String fileName = bufferedReader.readLine();
+                if (fileName.equals(endMessage)) {
+                    System.out.println("LOG: "+clientAddress + ": CONNECTION ABORTED");
                     stopClient();
                     break;
                 }
+                System.out.println("LOG: "+clientAddress + ": GOT REQUEST FOR FILE " + fileName);
+                byte[] bytes = getBytes(fileName);
+                System.out.println("LOG: "+clientAddress + ": SENDING FILE... " + fileName);
+                outputStream.write(bytes,0,bytes.length);
+                outputStream.flush();
+                System.out.println("LOG: "+clientAddress + ": FILE SENT " + fileName);
+//                bufferedWriter.write("DONE" + "\n");
+//                bufferedWriter.flush();
+
+
             }
         } catch (IOException exception) {
             System.out.println(exception.getMessage());
         }
+    }
+
+    private byte[] getBytes(String fileName) throws IOException{
+        File file = new File(fileName);
+        FileInputStream fileInputStream = new FileInputStream(file);
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+        //Read bytes
+        byte[] bytes = new byte[(int) file.length()];
+        bufferedInputStream.read(bytes, 0, bytes.length);
+        return bytes;
     }
 
     public void stopClient() {

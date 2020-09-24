@@ -34,7 +34,7 @@ public class Server {
     public void start() {
         try {
             serverSocket = new ServerSocket(port, connectionsMax, address);
-            System.out.println("SERVER is run");
+            System.out.println("LOG: "+"SERVER IS RUN");
 
             while (true){
                 Socket clientSocket= serverSocket.accept();

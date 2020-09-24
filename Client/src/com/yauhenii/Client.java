@@ -1,28 +1,37 @@
 package com.yauhenii;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 public class Client {
 
-    private final String endMessage="exit";
+    private final static int FILE_SIZE = 8192;//6022386;
+    private final static String endMessage="exit";
 
     private Socket clientSocket;
     private BufferedReader consoleReader;
-    private BufferedReader in;
-    private BufferedWriter out;
+//    private BufferedReader in;
+    private InputStream inputStream; //Read bytes
+    private BufferedWriter bufferedWriter; //Write text
 
     int port;
     int remotePort;
     InetAddress address;
     InetAddress remoteAddress;
 
-    public Client(InetAddress remoteAddress, int remotePort, InetAddress address, int port) {
+    private static Logger log = Logger.getLogger(Client.class.getName());
+
+    public Client(InetAddress remoteAddress, int remotePort, InetAddress address, int port) throws IOException {
         this.port = port;
         this.remotePort = remotePort;
         this.address = address;
@@ -32,22 +41,29 @@ public class Client {
     public void start(){
         try {
             clientSocket = new Socket(remoteAddress,remotePort,address,port);
-            System.out.println("Client is run");
+            log.info("CLIENT IS RUN");
 
             consoleReader = new BufferedReader(new InputStreamReader(System.in));
-
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+//        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            inputStream = clientSocket.getInputStream();
+            bufferedWriter = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 
             while (true) {
-                String word = consoleReader.readLine();
-                out.write(word + "\n");
-                out.flush();
-                String serverWord = in.readLine();
-                if(serverWord.equals(endMessage)){
+                log.info("GET BY FILE NAME:");
+                String fileName = consoleReader.readLine();
+                if(fileName.equals(endMessage)){
                     break;
                 }
-                System.out.println(serverWord);
+
+                log.info("SAVE AS:");
+                String newFileName = consoleReader.readLine();
+
+                bufferedWriter.write(fileName + "\n");
+                bufferedWriter.flush();
+                log.info("RECEIVING AND WRITING FILE...");
+//                writeConsole(inputStream);
+                writeFile(newFileName,inputStream);
+                log.info("FILE IS SUCCESSFULLY RECEIVED AND WROTE");
             }
 
             stop();
@@ -56,6 +72,25 @@ public class Client {
         }
     }
 
+    private void writeConsole(InputStream inputStream) throws IOException{
+        int count;
+        byte[] bytes = new byte[FILE_SIZE];
+        count = inputStream.read(bytes);
+        System.out.write(bytes, 0, count);
+        System.out.flush();
+    }
+
+//    https://stackoverflow.com/questions/9520911/java-sending-and-receiving-file-byte-over-sockets
+
+    private void writeFile(String fileName, InputStream inputStream) throws IOException{
+        FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
+        int count;
+        byte[] bytes = new byte[FILE_SIZE];
+        count = inputStream.read(bytes);
+        bufferedOutputStream.write(bytes, 0, count);
+        bufferedOutputStream.flush();
+    }
     public void stop() {
         try {
             clientSocket.close();
