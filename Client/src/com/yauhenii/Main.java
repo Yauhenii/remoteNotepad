@@ -6,7 +6,7 @@ import java.net.UnknownHostException;
 public class Main {
 
     private static int port=4000;
-    private static String addressString="127.0.0.3";
+    private static String addressString="127.0.0.4";
     private static int remotePort=4004;
     private static String remoteAddressString="127.0.0.2";
 
