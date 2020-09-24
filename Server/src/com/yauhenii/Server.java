@@ -9,9 +9,11 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
+import java.util.logging.Logger;
 import lombok.SneakyThrows;
+import lombok.extern.java.Log;
 
-//@Log4j2
+//@Log
 public class Server {
 
     private ServerSocket serverSocket;
@@ -21,6 +23,8 @@ public class Server {
     private InetAddress address;
 
     private LinkedList<ServerThread> serverThreads;
+
+    private static Logger log = Logger.getLogger(Server.class.getName());
 
     public Server(int port, int connectionsMax, InetAddress address) {
         this.port = port;
@@ -34,8 +38,7 @@ public class Server {
     public void start() {
         try {
             serverSocket = new ServerSocket(port, connectionsMax, address);
-            System.out.println("LOG: "+"SERVER IS RUN");
-
+            log.info("SERVER IS RUN");
             while (true){
                 Socket clientSocket= serverSocket.accept();
                 serverThreads.add(new ServerThread(clientSocket));

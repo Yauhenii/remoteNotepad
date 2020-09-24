@@ -16,11 +16,14 @@ import java.util.logging.Logger;
 public class Client {
 
     private final static int FILE_SIZE = 8192;//6022386;
-    private final static String endMessage="exit";
+
+    private final String endMessage = "exit";
+    private final String requestMessage = "request";
+    private final String echoMessage = "echo";
 
     private Socket clientSocket;
     private BufferedReader consoleReader;
-//    private BufferedReader in;
+    private BufferedReader bufferedReader;
     private InputStream inputStream; //Read bytes
     private BufferedWriter bufferedWriter; //Write text
 
@@ -44,26 +47,38 @@ public class Client {
             log.info("CLIENT IS RUN");
 
             consoleReader = new BufferedReader(new InputStreamReader(System.in));
-//        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             inputStream = clientSocket.getInputStream();
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 
             while (true) {
-                log.info("GET BY FILE NAME:");
-                String fileName = consoleReader.readLine();
-                if(fileName.equals(endMessage)){
+
+                String command = consoleReader.readLine();
+                String[] commandSplit= command.split(" ");
+
+                if (commandSplit[0].equals(endMessage)) {
+                    bufferedWriter.write(command + "\n");
+                    bufferedWriter.flush();
+                    System.out.println("CONNECTION ABORTED");
                     break;
+                } else if (commandSplit[0].equals(requestMessage)){
+                    String fileName=commandSplit[1];
+                    System.out.println("REQUEST FILE BY NAME: "+fileName);
+                    System.out.println("SAVE AS:");
+                    String newFileName = consoleReader.readLine();
+                    bufferedWriter.write(command + "\n");
+                    bufferedWriter.flush();
+                    System.out.println("RECEIVING AND WRITING FILE...");
+//                    writeConsole(inputStream);
+                    writeFile(newFileName,inputStream);
+                    System.out.println("FILE IS SUCCESSFULLY RECEIVED AND WROTE");
+                } else if (commandSplit[0].equals(echoMessage)){
+                    bufferedWriter.write(command + "\n");
+                    bufferedWriter.flush();
+                    String message=bufferedReader.readLine();
+                    System.out.println(message);
                 }
 
-                log.info("SAVE AS:");
-                String newFileName = consoleReader.readLine();
-
-                bufferedWriter.write(fileName + "\n");
-                bufferedWriter.flush();
-                log.info("RECEIVING AND WRITING FILE...");
-//                writeConsole(inputStream);
-                writeFile(newFileName,inputStream);
-                log.info("FILE IS SUCCESSFULLY RECEIVED AND WROTE");
             }
 
             stop();

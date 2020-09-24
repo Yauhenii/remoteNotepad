@@ -10,48 +10,59 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.util.logging.Logger;
 
 public class ServerThread extends Thread {
 
     private final String endMessage = "exit";
+    private final String requestMessage = "request";
+    private final String echoMessage = "echo";
 
     private Socket clientSocket;
     private String clientAddress;
     private BufferedReader bufferedReader; //Read text
     private OutputStream outputStream; //Write bytes
-//    private BufferedWriter bufferedWriter;
+    private BufferedWriter bufferedWriter; //Write text
 
+    private static Logger log = Logger.getLogger(Server.class.getName());
 
     public ServerThread(Socket clientSocket) throws IOException {
         this.clientSocket = clientSocket;
         clientAddress = clientSocket.getInetAddress().getHostAddress();
         bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         outputStream = clientSocket.getOutputStream();
-//        bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
+        bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
         start();
     }
 
+    // TODO: 9/24/20 Rewrite if/else if to map
+
     @Override
     public void run() {
-        System.out.println("LOG: "+ clientAddress + ": CONNECTION ESTABLISHED");
+        log.info(clientAddress + ": CONNECTION ESTABLISHED");
         try {
             while (true) {
-                String fileName = bufferedReader.readLine();
-                if (fileName.equals(endMessage)) {
-                    System.out.println("LOG: "+clientAddress + ": CONNECTION ABORTED");
+                String command = bufferedReader.readLine();
+                String[] commandSplit= command.split(" ");
+                if (commandSplit[0].equals(endMessage)) {
+                    log.info(clientAddress + ": CONNECTION ABORTED");
                     stopClient();
                     break;
+                } else if (commandSplit[0].equals(requestMessage)){
+                    String fileName=commandSplit[1];
+                    log.info(clientAddress + ": GOT REQUEST FOR FILE " + fileName);
+                    byte[] bytes = getBytes(fileName);
+                    log.info(clientAddress + ": SENDING FILE... " + fileName);
+                    outputStream.write(bytes,0,bytes.length);
+                    outputStream.flush();
+                    log.info(clientAddress + ": FILE SENT " + fileName);
+                } else if (commandSplit[0].equals(echoMessage)){
+                    String message=commandSplit[1];
+                    log.info(clientAddress + ": GOT ECHO MESSAGE ");
+                    bufferedWriter.write(message + "\n");
+                    bufferedWriter.flush();
+                    log.info(clientAddress + ": SENT ECHO MESSAGE BACK");
                 }
-                System.out.println("LOG: "+clientAddress + ": GOT REQUEST FOR FILE " + fileName);
-                byte[] bytes = getBytes(fileName);
-                System.out.println("LOG: "+clientAddress + ": SENDING FILE... " + fileName);
-                outputStream.write(bytes,0,bytes.length);
-                outputStream.flush();
-                System.out.println("LOG: "+clientAddress + ": FILE SENT " + fileName);
-//                bufferedWriter.write("DONE" + "\n");
-//                bufferedWriter.flush();
-
-
             }
         } catch (IOException exception) {
             System.out.println(exception.getMessage());
