@@ -4,3 +4,5 @@ Server/Server.iml
 Client/Client.iml
 Server/.idea/
 Client/.idea/
+Server/storage/
+Client/storage/
