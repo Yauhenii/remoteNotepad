@@ -8,8 +8,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 
 public class ServerThread extends Thread {
 
@@ -29,6 +36,9 @@ public class ServerThread extends Thread {
 
     private static Logger log = Logger.getLogger(Server.class.getName());
 
+    PublicKey publicKey;
+    Cipher encryptCipher;
+
     public ServerThread(Socket clientSocket) throws IOException {
         this.clientSocket = clientSocket;
         clientAddress = clientSocket.getInetAddress().getHostAddress();
@@ -43,11 +53,22 @@ public class ServerThread extends Thread {
     public void run() {
         log.info(clientAddress + ": CONNECTION ESTABLISHED");
         try {
+            byte[] bytes;
+            String command;
+            String[] commandSplit;
+            //Get public key
+            bytes=readBytes();
+            System.out.println("GOT PUBLIC KEY");
+            encryptCipher = Cipher.getInstance("RSA");
+            publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(bytes));
+            encryptCipher.init(Cipher.ENCRYPT_MODE,publicKey);
+
+            writeBytes(encryptCipher.doFinal("hello".getBytes()));
+
             while (true) {
-                byte[] bytes=null;
                 bytes = readBytes();
-                String command = new String(bytes);
-                String[] commandSplit = command.split(" ");
+                command = new String(bytes);
+                commandSplit = command.split(" ");
 
                 if (commandSplit[0].equals(endMessage)) {
                     log.info(clientAddress + ": CONNECTION ABORTED");
@@ -78,28 +99,29 @@ public class ServerThread extends Thread {
                     log.info(clientAddress + ": INVALID COMMAND");
                 }
             }
-        } catch (IOException exception) {
-            System.out.println(exception.getMessage());
+        } catch (Exception exception) {
+            log.warning(exception.getMessage());
         }
     }
 
-    private byte[] readBytes() throws IOException {
+    private byte[] readBytes() throws IOException, IllegalBlockSizeException, BadPaddingException {
         int count;
-        byte[] buffer = new byte[FILE_SIZE];
-        while ((count = inputStream.read(buffer)) > 0) {
-            return Arrays.copyOfRange(buffer, 0, count);
+        byte[] bytes = new byte[FILE_SIZE];
+        while ((count = inputStream.read(bytes)) > 0) {
+            bytes=Arrays.copyOfRange(bytes, 0, count);
+            break;
         }
-        return null;
-    }
-
-    private void writeBytes(byte[] bytes) throws IOException {
-        outputStream.write(bytes);
-        outputStream.flush();
+        return bytes;
     }
 
     private byte[] readBytesFromFile(String filename) throws IOException {
         File file = new File(storageFolderDestination + filename);
         return Files.readAllBytes(file.toPath());
+    }
+
+    private void writeBytes(byte[] bytes) throws IOException, IllegalBlockSizeException, BadPaddingException {
+        outputStream.write(bytes);
+        outputStream.flush();
     }
 
     public void stopClient() {

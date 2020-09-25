@@ -2,18 +2,24 @@ package com.yauhenii;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.logging.LogManager;
+import java.util.Base64;
 import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 public class Client {
 
@@ -35,10 +41,13 @@ public class Client {
     InetAddress address;
     InetAddress remoteAddress;
 
+    KeyPair keyPair;
+    Cipher decryptCipher;
+
     private static Logger log = Logger.getLogger(Client.class.getName());
 
     public Client(InetAddress remoteAddress, int remotePort, InetAddress address, int port)
-        throws IOException {
+        throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
         this.port = port;
         this.remotePort = remotePort;
         this.address = address;
@@ -48,17 +57,26 @@ public class Client {
     public void start() {
         try {
             clientSocket = new Socket(remoteAddress, remotePort, address, port);
-            log.info("CLIENT IS RUN");
-
             consoleReader = new BufferedReader(new InputStreamReader(System.in));
             inputStream = clientSocket.getInputStream();
             outputStream = clientSocket.getOutputStream();
+            log.info("CLIENT IS RUN");
+
+            //Send public key
+            keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
+            decryptCipher = Cipher.getInstance("RSA");
+            decryptCipher.init(Cipher.DECRYPT_MODE,keyPair.getPrivate());
+            System.out.println("PUBLIC KEY IS SENT");
+            writeBytes(keyPair.getPublic().getEncoded());
+
+            System.out.println(new String(decryptCipher.doFinal(readBytes())));
 
             while (true) {
                 String command = consoleReader.readLine();
                 String[] commandSplit = command.split(" ");
 
                 writeBytes(command.getBytes());
+
 
                 byte[] bytes = null;
 
@@ -93,9 +111,19 @@ public class Client {
             }
 
             stop();
-        } catch (IOException exception) {
+        } catch (Exception exception) {
             System.out.println(exception.getMessage());
         }
+    }
+
+    private byte[] readBytes() throws IOException, IllegalBlockSizeException, BadPaddingException {
+        int count;
+        byte[] bytes = new byte[FILE_SIZE];
+        while ((count = inputStream.read(bytes)) > 0) {
+            bytes=Arrays.copyOfRange(bytes, 0, count);
+            break;
+        }
+        return bytes;
     }
 
     private void writeBytesToFile(byte[] bytes, String fileName) throws IOException {
@@ -109,15 +137,6 @@ public class Client {
     private void writeBytesToConsole(byte[] bytes) throws IOException {
         System.out.write(bytes, 0, bytes.length);
         System.out.flush();
-    }
-
-    private byte[] readBytes() throws IOException {
-        int count;
-        byte[] buffer = new byte[FILE_SIZE];
-        while ((count = inputStream.read(buffer)) > 0) {
-            return Arrays.copyOfRange(buffer, 0, count);
-        }
-        return null;
     }
 
     private void writeBytes(byte[] bytes) throws IOException {
