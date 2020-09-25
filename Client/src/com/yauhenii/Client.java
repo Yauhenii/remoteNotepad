@@ -70,10 +70,11 @@ public class Client {
                     System.out.println("REQUEST FILE BY NAME: " + fileName);
                     String message = new String(readBytes());
                     if(message.equals(acceptMessage)){
-                        System.out.println("RECEIVING AND WRITING FILE...");
+                        System.out.println("RECEIVING FILE...");
                         bytes = readBytes();
                         System.out.println("SAVE AS:");
                         String newFileName = consoleReader.readLine();
+                        System.out.println("WRITING FILE...");
                         writeBytesToFile(bytes, newFileName);
 //                    writeBytesToConsole(bytes);
                         System.out.println("FILE IS SUCCESSFULLY RECEIVED AND WROTE");
