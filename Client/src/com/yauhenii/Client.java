@@ -18,18 +18,15 @@ import java.util.logging.Logger;
 public class Client {
 
     private final static int FILE_SIZE = 8192;//6022386;
-
-    private final String endMessage = "exit";
-    private final String requestMessage = "request";
-    private final String echoMessage = "echo";
+    private final static String endMessage = "exit";
+    private final static String requestMessage = "request";
+    private final static String echoMessage = "echo";
     private final static String storageFolderDestination = "/Users/zhenyamordan/Desktop/Учеба/4 курс 1 сем/КБРС/Task2/Client/storage/";
-
 
     private Socket clientSocket;
     private BufferedReader consoleReader;
-    private BufferedReader bufferedReader;
-    private InputStream inputStream; //Read bytes
-    private OutputStream outputStream; //Write bytes
+    private InputStream inputStream;
+    private OutputStream outputStream;
 
     int port;
     int remotePort;
@@ -61,7 +58,7 @@ public class Client {
 
                 writeBytes(command.getBytes());
 
-                byte[] bytes;
+                byte[] bytes = null;
 
                 if (commandSplit[0].equals(endMessage)) {
                     System.out.println("CONNECTION ABORTED");
@@ -89,7 +86,7 @@ public class Client {
         }
     }
 
-    private void writeBytesToFile(byte[] bytes, String fileName) throws IOException{
+    private void writeBytesToFile(byte[] bytes, String fileName) throws IOException {
         FileOutputStream fileOutputStream = new FileOutputStream(
             storageFolderDestination + fileName);
         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
@@ -97,7 +94,7 @@ public class Client {
         bufferedOutputStream.flush();
     }
 
-    private void writeBytesToConsole(byte[] bytes) throws IOException{
+    private void writeBytesToConsole(byte[] bytes) throws IOException {
         System.out.write(bytes, 0, bytes.length);
         System.out.flush();
     }

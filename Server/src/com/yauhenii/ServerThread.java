@@ -14,23 +14,22 @@ import java.util.logging.Logger;
 public class ServerThread extends Thread {
 
     private final static int FILE_SIZE = 8192;//6022386;
-
-    private final String endMessage = "exit";
-    private final String requestMessage = "request";
-    private final String echoMessage = "echo";
+    private final static String endMessage = "exit";
+    private final static String requestMessage = "request";
+    private final static String echoMessage = "echo";
     private final static String storageFolderDestination = "/Users/zhenyamordan/Desktop/Учеба/4 курс 1 сем/КБРС/Task2/Server/storage/";
 
     private Socket clientSocket;
     private String clientAddress;
-    private InputStream inputStream; //Read bytes
-    private OutputStream outputStream; //Write bytes
+    private InputStream inputStream;
+    private OutputStream outputStream;
 
     private static Logger log = Logger.getLogger(Server.class.getName());
 
     public ServerThread(Socket clientSocket) throws IOException {
         this.clientSocket = clientSocket;
         clientAddress = clientSocket.getInetAddress().getHostAddress();
-        inputStream=clientSocket.getInputStream();
+        inputStream = clientSocket.getInputStream();
         outputStream = clientSocket.getOutputStream();
         start();
     }
@@ -42,25 +41,25 @@ public class ServerThread extends Thread {
         log.info(clientAddress + ": CONNECTION ESTABLISHED");
         try {
             while (true) {
-                byte[] bytes;
+                byte[] bytes=null;
                 bytes = readBytes();
                 String command = new String(bytes);
-                String[] commandSplit= command.split(" ");
+                String[] commandSplit = command.split(" ");
 
                 if (commandSplit[0].equals(endMessage)) {
                     log.info(clientAddress + ": CONNECTION ABORTED");
                     stopClient();
                     break;
-                } else if (commandSplit[0].equals(requestMessage)){
-                    String fileName=commandSplit[1];
+                } else if (commandSplit[0].equals(requestMessage)) {
+                    String fileName = commandSplit[1];
                     log.info(clientAddress + ": GOT REQUEST FOR FILE " + fileName);
                     bytes = readBytesFromFile(fileName);
                     log.info(clientAddress + ": SENDING FILE... " + fileName);
                     System.out.println(new String(bytes));
                     writeBytes(bytes);
                     log.info(clientAddress + ": FILE SENT " + fileName);
-                } else if (commandSplit[0].equals(echoMessage)){
-                    String message=commandSplit[1];
+                } else if (commandSplit[0].equals(echoMessage)) {
+                    String message = commandSplit[1];
                     log.info(clientAddress + ": GOT ECHO MESSAGE ");
                     writeBytes(message.getBytes());
                     log.info(clientAddress + ": SENT ECHO MESSAGE BACK");
@@ -80,14 +79,14 @@ public class ServerThread extends Thread {
         return null;
     }
 
-    private void writeBytes(byte[] bytes) throws IOException{
+    private void writeBytes(byte[] bytes) throws IOException {
         outputStream.write(bytes);
         outputStream.flush();
     }
 
-    private byte[] readBytesFromFile(String filename) throws IOException{
-        File file = new File(storageFolderDestination+filename);
-        return  Files.readAllBytes(file.toPath());
+    private byte[] readBytesFromFile(String filename) throws IOException {
+        File file = new File(storageFolderDestination + filename);
+        return Files.readAllBytes(file.toPath());
     }
 
     public void stopClient() {
