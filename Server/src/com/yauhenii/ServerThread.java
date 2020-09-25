@@ -17,6 +17,9 @@ public class ServerThread extends Thread {
     private final static String endMessage = "exit";
     private final static String requestMessage = "request";
     private final static String echoMessage = "echo";
+    private final static String acceptMessage = "accept";
+    private final static String denyMessage = "deny";
+
     private final static String storageFolderDestination = "/Users/zhenyamordan/Desktop/Учеба/4 курс 1 сем/КБРС/Task2/Server/storage/";
 
     private Socket clientSocket;
@@ -63,6 +66,8 @@ public class ServerThread extends Thread {
                     log.info(clientAddress + ": GOT ECHO MESSAGE ");
                     writeBytes(message.getBytes());
                     log.info(clientAddress + ": SENT ECHO MESSAGE BACK");
+                } else {
+                    log.info(clientAddress + ": INVALID COMMAND");
                 }
             }
         } catch (IOException exception) {

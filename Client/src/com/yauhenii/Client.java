@@ -21,6 +21,8 @@ public class Client {
     private final static String endMessage = "exit";
     private final static String requestMessage = "request";
     private final static String echoMessage = "echo";
+    private final static String acceptMessage = "accept";
+    private final static String denyMessage = "deny";
     private final static String storageFolderDestination = "/Users/zhenyamordan/Desktop/Учеба/4 курс 1 сем/КБРС/Task2/Client/storage/";
 
     private Socket clientSocket;
@@ -76,6 +78,8 @@ public class Client {
                 } else if (commandSplit[0].equals(echoMessage)) {
                     bytes = readBytes();
                     System.out.println(new String(bytes));
+                } else{
+                    System.out.println("INVALID COMMAND");
                 }
 
             }
