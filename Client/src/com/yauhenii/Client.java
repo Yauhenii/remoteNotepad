@@ -59,8 +59,7 @@ public class Client {
                 String command = consoleReader.readLine();
                 String[] commandSplit = command.split(" ");
 
-                outputStream.write(command.getBytes());
-                outputStream.flush();
+                writeBytes(command.getBytes());
 
                 byte[] bytes;
 
@@ -98,6 +97,11 @@ public class Client {
             return Arrays.copyOfRange(buffer, 0, count);
         }
         return null;
+    }
+
+    private void writeBytes(byte[] bytes) throws IOException{
+        outputStream.write(bytes);
+        outputStream.flush();
     }
 
 //    https://stackoverflow.com/questions/9520911/java-sending-and-receiving-file-byte-over-sockets

@@ -45,7 +45,8 @@ public class ServerThread extends Thread {
         log.info(clientAddress + ": CONNECTION ESTABLISHED");
         try {
             while (true) {
-                byte[] bytes= readBytes();
+                byte[] bytes;
+                bytes = readBytes();
                 String command = new String(bytes);
                 String[] commandSplit= command.split(" ");
 
@@ -64,8 +65,7 @@ public class ServerThread extends Thread {
                 } else if (commandSplit[0].equals(echoMessage)){
                     String message=commandSplit[1];
                     log.info(clientAddress + ": GOT ECHO MESSAGE ");
-                    outputStream.write(message.getBytes());
-                    outputStream.flush();
+                    writeBytes(message.getBytes());
                     log.info(clientAddress + ": SENT ECHO MESSAGE BACK");
                 }
             }
@@ -81,6 +81,11 @@ public class ServerThread extends Thread {
             return Arrays.copyOfRange(buffer, 0, count);
         }
         return null;
+    }
+
+    private void writeBytes(byte[] bytes) throws IOException{
+        outputStream.write(bytes);
+        outputStream.flush();
     }
 
     private byte[] getBytes(String fileName) throws IOException{
