@@ -19,6 +19,7 @@ public class Client {
     private final String endMessage = "exit";
     private final String requestMessage = "request";
     private final String echoMessage = "echo";
+    private final static String sendMessage = "send";
     private final static String acceptMessage = "accepted";
     private final static String deniedMessage = "denied";
 
@@ -51,8 +52,8 @@ public class Client {
             log.info("CLIENT IS RUN");
 
             consoleReader = new BufferedReader(new InputStreamReader(System.in));
-            bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             inputStream = clientSocket.getInputStream();
+            bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 
             while (true) {
@@ -68,12 +69,23 @@ public class Client {
                     String fileName=commandSplit[1];
                     System.out.println("REQUEST FILE BY NAME: "+fileName);
                     sendMessage(command);
+                    ////
+                    log.warning("GET ACCEPT MESSAGE");
+                    ////
                     String message=readMessage();
+                    ////
+                    log.warning("GOT ACCEPT MESSAGE");
+                    ////
                     if(message.equals(acceptMessage)){
                         System.out.println("SAVE AS:");
                         String newFileName = consoleReader.readLine();
+                        ////
+                        log.warning("SEND ACCEPT MESSAGE");
+                        sendMessage(acceptMessage);
+                        log.warning("SENT ACCEPT MESSAGE");
+                        ////
                         System.out.println("RECEIVING AND WRITING FILE...");
-                        writeFile(newFileName,inputStream);
+                        writeFile(newFileName);
                         System.out.println("FILE IS SUCCESSFULLY RECEIVED AND WROTE");
                     } else if(message.equals(deniedMessage)){
                         System.out.println("FILE IS NOT FOUND");
@@ -94,7 +106,15 @@ public class Client {
     }
 
     private String readMessage() throws IOException{
-        return bufferedReader.readLine();
+        String line;
+        while ((line = bufferedReader.readLine())!=null){
+            break;
+        }
+        return line;
+    }
+
+    private byte[]readBytesMessage() throws IOException{
+        return inputStream.readAllBytes();
     }
 
     private void sendMessage(String message) throws IOException {
@@ -104,14 +124,15 @@ public class Client {
 
 //    https://stackoverflow.com/questions/9520911/java-sending-and-receiving-file-byte-over-sockets
 
-    private void writeFile(String fileName, InputStream inputStream) throws IOException{
+    private void writeFile(String fileName) throws IOException{
         FileOutputStream fileOutputStream = new FileOutputStream(storageFolderDestination+fileName);
         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
         int count;
         byte[] bytes = new byte[FILE_SIZE];
-        count = inputStream.read(bytes);
-        bufferedOutputStream.write(bytes, 0, count);
-        bufferedOutputStream.flush();
+        while ((count = inputStream.read(bytes))!=0){
+            bufferedOutputStream.write(bytes, 0, count);
+            bufferedOutputStream.flush();
+        }
     }
     public void stop() {
         try {

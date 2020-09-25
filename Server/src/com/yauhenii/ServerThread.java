@@ -21,6 +21,7 @@ public class ServerThread extends Thread {
     private final static String requestMessage = "request";
     private final static String echoMessage = "echo";
     private final static String acceptMessage = "accepted";
+    private final static String sendMessage = "send";
     private final static String deniedMessage = "denied";
     private final static String storageFolderDestination = "/Users/zhenyamordan/Desktop/Учеба/4 курс 1 сем/КБРС/Task2/Server/storage/";
 
@@ -43,6 +44,7 @@ public class ServerThread extends Thread {
 
     // TODO: 9/24/20 Rewrite if/else if to map
 
+
     @Override
     public void run() {
         log.info(clientAddress + ": CONNECTION ESTABLISHED");
@@ -61,7 +63,16 @@ public class ServerThread extends Thread {
                         byte[] bytes = getBytes(fileName);
 
                         log.info(clientAddress + ": SENDING ACCEPT MESSAGE... ");
+                        ////
+                        log.warning("SEND ACCEPT MESSAGE");
+                        ////
                         sendMessage(acceptMessage);
+                        ////
+                        log.warning("SENT ACCEPT MESSAGE");
+                        log.warning("GET ACCEPT MESSAGE");
+                        readMessage();
+                        log.warning("GOT ACCEPT MESSAGE");
+                        ////
                         log.info(clientAddress + ": SENDING FILE... " + fileName);
                         sendMessage(bytes);
                         log.info(clientAddress + ": FILE SENT " + fileName);
@@ -79,6 +90,14 @@ public class ServerThread extends Thread {
         } catch (IOException exception) {
             System.out.println(exception.getMessage());
         }
+    }
+
+    private String readMessage() throws IOException{
+        String line;
+        while ((line = bufferedReader.readLine())!=null){
+            break;
+        }
+        return line;
     }
 
     private void sendMessage(String message) throws IOException {
