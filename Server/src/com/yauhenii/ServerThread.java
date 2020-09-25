@@ -56,11 +56,19 @@ public class ServerThread extends Thread {
                 } else if (commandSplit[0].equals(requestMessage)) {
                     String fileName = commandSplit[1];
                     log.info(clientAddress + ": GOT REQUEST FOR FILE " + fileName);
-                    bytes = readBytesFromFile(fileName);
-                    log.info(clientAddress + ": SENDING FILE... " + fileName);
-                    System.out.println(new String(bytes));
-                    writeBytes(bytes);
-                    log.info(clientAddress + ": FILE SENT " + fileName);
+                    try {
+                        bytes = readBytesFromFile(fileName);
+                        log.info(clientAddress + ": SENDING ACCEPT MESSAGE... " + fileName);
+                        writeBytes(acceptMessage.getBytes());
+                        log.info(clientAddress + ": SENDING FILE... " + fileName);
+                        writeBytes(bytes);
+                        log.info(clientAddress + ": FILE SENT " + fileName);
+                    } catch (IOException exception){
+                        log.info(clientAddress + ": SENDING DENY MESSAGE... " + fileName);
+                        writeBytes(denyMessage.getBytes());
+                        log.info(clientAddress + ": FILE IS NOT FOUND " + fileName);
+                    }
+
                 } else if (commandSplit[0].equals(echoMessage)) {
                     String message = commandSplit[1];
                     log.info(clientAddress + ": GOT ECHO MESSAGE ");

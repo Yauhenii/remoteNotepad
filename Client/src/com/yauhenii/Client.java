@@ -68,13 +68,20 @@ public class Client {
                 } else if (commandSplit[0].equals(requestMessage)) {
                     String fileName = commandSplit[1];
                     System.out.println("REQUEST FILE BY NAME: " + fileName);
-                    System.out.println("SAVE AS:");
-                    String newFileName = consoleReader.readLine();
-                    System.out.println("RECEIVING AND WRITING FILE...");
-                    bytes = readBytes();
-                    writeBytesToFile(bytes, newFileName);
+                    String message = new String(readBytes());
+                    if(message.equals(acceptMessage)){
+                        System.out.println("RECEIVING AND WRITING FILE...");
+                        bytes = readBytes();
+                        System.out.println("SAVE AS:");
+                        String newFileName = consoleReader.readLine();
+                        writeBytesToFile(bytes, newFileName);
 //                    writeBytesToConsole(bytes);
-                    System.out.println("FILE IS SUCCESSFULLY RECEIVED AND WROTE");
+                        System.out.println("FILE IS SUCCESSFULLY RECEIVED AND WROTE");
+                    } else if (message.equals(denyMessage)){
+                        System.out.println("FILE IS NOT FOUND");
+                    } else{
+                        System.out.println("ERROR");
+                    }
                 } else if (commandSplit[0].equals(echoMessage)) {
                     bytes = readBytes();
                     System.out.println(new String(bytes));
