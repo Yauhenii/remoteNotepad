@@ -7,9 +7,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 public class Client {
@@ -19,17 +22,14 @@ public class Client {
     private final String endMessage = "exit";
     private final String requestMessage = "request";
     private final String echoMessage = "echo";
-    private final static String sendMessage = "send";
-    private final static String acceptMessage = "accepted";
-    private final static String deniedMessage = "denied";
-
     private final static String storageFolderDestination = "/Users/zhenyamordan/Desktop/Учеба/4 курс 1 сем/КБРС/Task2/Client/storage/";
+
 
     private Socket clientSocket;
     private BufferedReader consoleReader;
     private BufferedReader bufferedReader;
     private InputStream inputStream; //Read bytes
-    private BufferedWriter bufferedWriter; //Write text
+    private OutputStream outputStream; //Write bytes
 
     int port;
     int remotePort;
@@ -38,102 +38,83 @@ public class Client {
 
     private static Logger log = Logger.getLogger(Client.class.getName());
 
-
-    public Client(InetAddress remoteAddress, int remotePort, InetAddress address, int port) throws IOException {
+    public Client(InetAddress remoteAddress, int remotePort, InetAddress address, int port)
+        throws IOException {
         this.port = port;
         this.remotePort = remotePort;
         this.address = address;
         this.remoteAddress = remoteAddress;
     }
 
-    public void start(){
+    public void start() {
         try {
-            clientSocket = new Socket(remoteAddress,remotePort,address,port);
+            clientSocket = new Socket(remoteAddress, remotePort, address, port);
             log.info("CLIENT IS RUN");
 
             consoleReader = new BufferedReader(new InputStreamReader(System.in));
             inputStream = clientSocket.getInputStream();
-            bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-            bufferedWriter = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+            outputStream = clientSocket.getOutputStream();
 
             while (true) {
-
                 String command = consoleReader.readLine();
-                String[] commandSplit= command.split(" ");
+                String[] commandSplit = command.split(" ");
+
+                outputStream.write(command.getBytes());
+                outputStream.flush();
+
+                byte[] bytes;
 
                 if (commandSplit[0].equals(endMessage)) {
-                    sendMessage(command);
                     System.out.println("CONNECTION ABORTED");
                     break;
-                } else if (commandSplit[0].equals(requestMessage)){
-                    String fileName=commandSplit[1];
-                    System.out.println("REQUEST FILE BY NAME: "+fileName);
-                    sendMessage(command);
-                    ////
-                    log.warning("GET ACCEPT MESSAGE");
-                    ////
-                    String message=readMessage();
-                    ////
-                    log.warning("GOT ACCEPT MESSAGE");
-                    ////
-                    if(message.equals(acceptMessage)){
-                        System.out.println("SAVE AS:");
-                        String newFileName = consoleReader.readLine();
-                        ////
-                        log.warning("SEND ACCEPT MESSAGE");
-                        sendMessage(acceptMessage);
-                        log.warning("SENT ACCEPT MESSAGE");
-                        ////
-                        System.out.println("RECEIVING AND WRITING FILE...");
-                        writeFile(newFileName);
-                        System.out.println("FILE IS SUCCESSFULLY RECEIVED AND WROTE");
-                    } else if(message.equals(deniedMessage)){
-                        System.out.println("FILE IS NOT FOUND");
-                        continue;
-                    }
-                } else if (commandSplit[0].equals(echoMessage)){
-                    sendMessage(command);
-                    String message=readMessage();
-                    System.out.println(message);
+//                } else if (commandSplit[0].equals(requestMessage)){
+//                    String fileName=commandSplit[1];
+//                    System.out.println("REQUEST FILE BY NAME: "+fileName);
+//                    System.out.println("SAVE AS:");
+//                    String newFileName = consoleReader.readLine();
+//                    bufferedWriter.write(command + "\n");
+//                    bufferedWriter.flush();
+//                    System.out.println("RECEIVING AND WRITING FILE...");
+////                    writeConsole(inputStream);
+//                    writeFile(newFileName,inputStream);
+//                    System.out.println("FILE IS SUCCESSFULLY RECEIVED AND WROTE");
+                } else if (commandSplit[0].equals(echoMessage)) {
+                    bytes = readBytes();
+                    System.out.println(new String(bytes));
                 }
 
             }
 
             stop();
-        } catch (IOException exception){
+        } catch (IOException exception) {
             System.out.println(exception.getMessage());
         }
     }
 
-    private String readMessage() throws IOException{
-        String line;
-        while ((line = bufferedReader.readLine())!=null){
-            break;
+    private byte[] readBytes() throws IOException {
+        int count;
+        byte[] buffer = new byte[FILE_SIZE];
+        while ((count = inputStream.read(buffer)) > 0) {
+            return Arrays.copyOfRange(buffer, 0, count);
         }
-        return line;
-    }
-
-    private byte[]readBytesMessage() throws IOException{
-        return inputStream.readAllBytes();
-    }
-
-    private void sendMessage(String message) throws IOException {
-        bufferedWriter.write(message + "\n");
-        bufferedWriter.flush();
+        return null;
     }
 
 //    https://stackoverflow.com/questions/9520911/java-sending-and-receiving-file-byte-over-sockets
 
-    private void writeFile(String fileName) throws IOException{
-        FileOutputStream fileOutputStream = new FileOutputStream(storageFolderDestination+fileName);
-        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
-        int count;
-        byte[] bytes = new byte[FILE_SIZE];
-        while ((count = inputStream.read(bytes))!=0){
-            bufferedOutputStream.write(bytes, 0, count);
-            bufferedOutputStream.flush();
-        }
-    }
+//    private void writeFile(String fileName, InputStream inputStream) throws IOException {
+//        FileOutputStream fileOutputStream = new FileOutputStream(
+//            storageFolderDestination + fileName);
+//        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
+//        int count;
+//        byte[] bytes = new byte[FILE_SIZE];
+//        if () {
+//            count = inputStream.read(bytes);
+//        }
+//        bufferedOutputStream.write(bytes, 0, count);
+//        bufferedOutputStream.flush();
+//    }
+
     public void stop() {
         try {
             clientSocket.close();
