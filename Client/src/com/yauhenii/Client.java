@@ -66,17 +66,16 @@ public class Client {
                 if (commandSplit[0].equals(endMessage)) {
                     System.out.println("CONNECTION ABORTED");
                     break;
-//                } else if (commandSplit[0].equals(requestMessage)){
-//                    String fileName=commandSplit[1];
-//                    System.out.println("REQUEST FILE BY NAME: "+fileName);
-//                    System.out.println("SAVE AS:");
-//                    String newFileName = consoleReader.readLine();
-//                    bufferedWriter.write(command + "\n");
-//                    bufferedWriter.flush();
-//                    System.out.println("RECEIVING AND WRITING FILE...");
-////                    writeConsole(inputStream);
-//                    writeFile(newFileName,inputStream);
-//                    System.out.println("FILE IS SUCCESSFULLY RECEIVED AND WROTE");
+                } else if (commandSplit[0].equals(requestMessage)) {
+                    String fileName = commandSplit[1];
+                    System.out.println("REQUEST FILE BY NAME: " + fileName);
+                    System.out.println("SAVE AS:");
+                    String newFileName = consoleReader.readLine();
+                    System.out.println("RECEIVING AND WRITING FILE...");
+                    bytes = readBytes();
+                    writeBytesToFile(bytes, newFileName);
+//                    writeBytesToConsole(bytes);
+                    System.out.println("FILE IS SUCCESSFULLY RECEIVED AND WROTE");
                 } else if (commandSplit[0].equals(echoMessage)) {
                     bytes = readBytes();
                     System.out.println(new String(bytes));
@@ -90,6 +89,19 @@ public class Client {
         }
     }
 
+    private void writeBytesToFile(byte[] bytes, String fileName) throws IOException{
+        FileOutputStream fileOutputStream = new FileOutputStream(
+            storageFolderDestination + fileName);
+        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
+        bufferedOutputStream.write(bytes, 0, bytes.length);
+        bufferedOutputStream.flush();
+    }
+
+    private void writeBytesToConsole(byte[] bytes) throws IOException{
+        System.out.write(bytes, 0, bytes.length);
+        System.out.flush();
+    }
+
     private byte[] readBytes() throws IOException {
         int count;
         byte[] buffer = new byte[FILE_SIZE];
@@ -99,12 +111,20 @@ public class Client {
         return null;
     }
 
-    private void writeBytes(byte[] bytes) throws IOException{
+    private void writeBytes(byte[] bytes) throws IOException {
         outputStream.write(bytes);
         outputStream.flush();
     }
 
-//    https://stackoverflow.com/questions/9520911/java-sending-and-receiving-file-byte-over-sockets
+    public void stop() {
+        try {
+            clientSocket.close();
+        } catch (IOException exception) {
+            System.out.println(exception.getMessage());
+        }
+    }
+
+    //    https://stackoverflow.com/questions/9520911/java-sending-and-receiving-file-byte-over-sockets
 
 //    private void writeFile(String fileName, InputStream inputStream) throws IOException {
 //        FileOutputStream fileOutputStream = new FileOutputStream(
@@ -118,12 +138,4 @@ public class Client {
 //        bufferedOutputStream.write(bytes, 0, count);
 //        bufferedOutputStream.flush();
 //    }
-
-    public void stop() {
-        try {
-            clientSocket.close();
-        } catch (IOException exception) {
-            System.out.println(exception.getMessage());
-        }
-    }
 }

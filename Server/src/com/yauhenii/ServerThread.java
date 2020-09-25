@@ -1,16 +1,13 @@
 package com.yauhenii;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
@@ -54,14 +51,14 @@ public class ServerThread extends Thread {
                     log.info(clientAddress + ": CONNECTION ABORTED");
                     stopClient();
                     break;
-//                } else if (commandSplit[0].equals(requestMessage)){
-//                    String fileName=commandSplit[1];
-//                    log.info(clientAddress + ": GOT REQUEST FOR FILE " + fileName);
-//                    byte[] bytes = getBytes(fileName);
-//                    log.info(clientAddress + ": SENDING FILE... " + fileName);
-//                    outputStream.write(bytes,0,bytes.length);
-//                    outputStream.flush();
-//                    log.info(clientAddress + ": FILE SENT " + fileName);
+                } else if (commandSplit[0].equals(requestMessage)){
+                    String fileName=commandSplit[1];
+                    log.info(clientAddress + ": GOT REQUEST FOR FILE " + fileName);
+                    bytes = readBytesFromFile(fileName);
+                    log.info(clientAddress + ": SENDING FILE... " + fileName);
+                    System.out.println(new String(bytes));
+                    writeBytes(bytes);
+                    log.info(clientAddress + ": FILE SENT " + fileName);
                 } else if (commandSplit[0].equals(echoMessage)){
                     String message=commandSplit[1];
                     log.info(clientAddress + ": GOT ECHO MESSAGE ");
@@ -88,14 +85,9 @@ public class ServerThread extends Thread {
         outputStream.flush();
     }
 
-    private byte[] getBytes(String fileName) throws IOException{
-        File file = new File(fileName);
-        FileInputStream fileInputStream = new FileInputStream(storageFolderDestination+file);
-        BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
-        //Read bytes
-        byte[] bytes = new byte[(int) file.length()];
-        bufferedInputStream.read(bytes, 0, bytes.length);
-        return bytes;
+    private byte[] readBytesFromFile(String filename) throws IOException{
+        File file = new File(storageFolderDestination+filename);
+        return  Files.readAllBytes(file.toPath());
     }
 
     public void stopClient() {
