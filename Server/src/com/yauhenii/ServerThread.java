@@ -1,15 +1,13 @@
 package com.yauhenii;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.security.Key;
 import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
@@ -36,8 +34,10 @@ public class ServerThread extends Thread {
 
     private static Logger log = Logger.getLogger(Server.class.getName());
 
-    PublicKey publicKey;
-    Cipher encryptCipher;
+    Key keyAES;
+    PublicKey publicKeyRSA;
+    Cipher cipherAES;
+    Cipher encryptCipherRSA;
 
     public ServerThread(Socket clientSocket) throws IOException {
         this.clientSocket = clientSocket;
@@ -59,11 +59,13 @@ public class ServerThread extends Thread {
             //Get public key
             bytes=readBytes();
             System.out.println("GOT PUBLIC KEY");
-            encryptCipher = Cipher.getInstance("RSA");
-            publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(bytes));
-            encryptCipher.init(Cipher.ENCRYPT_MODE,publicKey);
-
-            writeBytes(encryptCipher.doFinal("hello".getBytes()));
+            encryptCipherRSA = Cipher.getInstance("RSA");
+            publicKeyRSA = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(bytes));
+            encryptCipherRSA.init(Cipher.ENCRYPT_MODE, publicKeyRSA);
+            //Generate and send AES key
+            cipherAES=Cipher.getInstance("AES/CBC/PKCS5Padding");
+            keyAES = KeyFactory.getInstance("AES/CBC/PKCS5Padding").generatePublic();
+            writeBytes(encryptCipherRSA.doFinal("hello".getBytes()));
 
             while (true) {
                 bytes = readBytes();
