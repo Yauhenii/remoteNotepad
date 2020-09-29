@@ -1,6 +1,8 @@
 package com.yauhenii;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -21,6 +23,7 @@ public class ServerThread extends Thread {
     private final static int FILE_SIZE = 8192;//6022386;
     private final static String endMessage = "exit";
     private final static String requestMessage = "request";
+    private final static String saveMessage = "save";
     private final static String echoMessage = "echo";
     private final static String acceptMessage = "accept";
     private final static String denyMessage = "deny";
@@ -63,8 +66,7 @@ public class ServerThread extends Thread {
             publicKeyRSA = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(bytes));
             encryptCipherRSA.init(Cipher.ENCRYPT_MODE, publicKeyRSA);
             //Generate and send AES key
-            cipherAES=Cipher.getInstance("AES/CBC/PKCS5Padding");
-            keyAES = KeyFactory.getInstance("AES/CBC/PKCS5Padding").generatePublic();
+
             writeBytes(encryptCipherRSA.doFinal("hello".getBytes()));
 
             while (true) {
@@ -97,6 +99,18 @@ public class ServerThread extends Thread {
                     log.info(clientAddress + ": GOT ECHO MESSAGE ");
                     writeBytes(message.getBytes());
                     log.info(clientAddress + ": SENT ECHO MESSAGE BACK");
+                } else if (commandSplit[0].equals(saveMessage)){
+                    String fileName = commandSplit[1];
+                    log.info(clientAddress + ": GOT REQUEST FOR FILE SAVING " + fileName);
+                    try {
+                    log.info(clientAddress + ": SENDING ACCEPT MESSAGE... " + fileName);
+                    writeBytes(acceptMessage.getBytes());
+                    bytes = readBytes();
+                    writeBytesToFile(bytes,fileName);
+                    } catch (IOException exception){
+                        log.info(clientAddress + ": SENDING DENY MESSAGE... " + fileName);
+                    }
+
                 } else {
                     log.info(clientAddress + ": INVALID COMMAND");
                 }
@@ -124,6 +138,14 @@ public class ServerThread extends Thread {
     private void writeBytes(byte[] bytes) throws IOException, IllegalBlockSizeException, BadPaddingException {
         outputStream.write(bytes);
         outputStream.flush();
+    }
+
+    private void writeBytesToFile(byte[] bytes, String fileName) throws IOException {
+        FileOutputStream fileOutputStream = new FileOutputStream(
+            storageFolderDestination + fileName);
+        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
+        bufferedOutputStream.write(bytes, 0, bytes.length);
+        bufferedOutputStream.flush();
     }
 
     public void stopClient() {
