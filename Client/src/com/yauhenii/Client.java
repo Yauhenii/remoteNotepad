@@ -28,13 +28,11 @@ public class Client {
     private final static String endMessage = "exit";
     private final static String requestMessage = "request";
     private final static String saveMessage = "save";
-    private final static String echoMessage = "echo";
     private final static String acceptMessage = "accept";
     private final static String denyMessage = "deny";
     private final static String storageFolderDestination = "/Users/zhenyamordan/Desktop/Учеба/4 курс 1 сем/КБРС/Task2/Client/storage/";
 
     private Socket clientSocket;
-    private BufferedReader consoleReader;
     private InputStream inputStream;
     private OutputStream outputStream;
 
@@ -58,7 +56,6 @@ public class Client {
 
     public void start() throws Exception{
             clientSocket = new Socket(remoteAddress, remotePort, address, port);
-            consoleReader = new BufferedReader(new InputStreamReader(System.in));
             inputStream = clientSocket.getInputStream();
             outputStream = clientSocket.getOutputStream();
             log.info("CLIENT IS RUN");
@@ -88,7 +85,6 @@ public class Client {
         if (message.equals(acceptMessage)) {
             log.info("RECEIVING FILE...");
             bytes = readBytes();
-//            writeBytesToFile(bytes, newFileName);
             log.info("FILE IS SUCCESSFULLY RECEIVED AND WROTE");
         } else if (message.equals(denyMessage)) {
             log.info("FILE IS NOT FOUND");

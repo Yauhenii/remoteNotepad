@@ -3,6 +3,7 @@ package com.yauhenii;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -21,6 +22,7 @@ import javax.swing.WindowConstants;
 public class MainWindow extends JFrame {
 
     private Client client;
+    private String currentFileName;
 
     private JScrollPane mainScrollPane;
 
@@ -47,7 +49,7 @@ public class MainWindow extends JFrame {
 
     public MainWindow(Client client) {
         //client
-        this.client=client;
+        this.client = client;
         //authPanel
 //        authPanel = new JPanel(new GridLayout(2, 2, 1, 0));
 //        enterButton = new JButton("Enter bar");
@@ -169,9 +171,16 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    byte[] bytes=client.sendRequestForFileMessage("test1.txt");
-                    mainTextArea.setText(new String(bytes));
-                } catch (IOException exception){
+                    FileNameDialog fileNameDialog = new FileNameDialog(MainWindow.this);
+                    fileNameDialog.setVisible(true);
+                    if (currentFileName != null) {
+                        byte[] bytes = client.sendRequestForFileMessage(currentFileName);
+                        mainTextArea.setText(new String(bytes));
+                    } else {
+                        JOptionPane.showMessageDialog(MainWindow.this,
+                            "No file name", "Warning", JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (IOException exception) {
                     JOptionPane.showMessageDialog(MainWindow.this,
                         "File is not found", "Warning", JOptionPane.WARNING_MESSAGE);
                 }
@@ -181,14 +190,37 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    byte[] bytes=mainTextArea.getText().getBytes();
-                    client.sendSaveAsMessage("saved.txt",bytes);
-                } catch (IOException exception){
+                    FileNameDialog fileNameDialog = new FileNameDialog(MainWindow.this);
+                    fileNameDialog.setVisible(true);
+                    System.out.println("LOL");
+                    if (currentFileName != null) {
+                        byte[] bytes = mainTextArea.getText().getBytes();
+                        client.sendSaveAsMessage(currentFileName, bytes);
+                    } else {
+                        JOptionPane.showMessageDialog(MainWindow.this,
+                            "No file name", "Warning", JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (IOException exception) {
                     JOptionPane.showMessageDialog(MainWindow.this,
                         "File is not found", "Warning", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
+        logOutItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    client.sendEndMessage();
+                    MainWindow.this.dispatchEvent(new WindowEvent(MainWindow.this, WindowEvent.WINDOW_CLOSING));
+                } catch (IOException exception){
+                    JOptionPane.showMessageDialog(MainWindow.this,
+                        "Can not log out", "Warning", JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        });
     }
 
+    public void setCurrentFileName(String currentFileName) {
+        this.currentFileName = currentFileName;
+    }
 }
