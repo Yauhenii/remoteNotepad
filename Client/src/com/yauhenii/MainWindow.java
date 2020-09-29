@@ -1,0 +1,194 @@
+package com.yauhenii;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.WindowConstants;
+
+public class MainWindow extends JFrame {
+
+    private Client client;
+
+    private JScrollPane mainScrollPane;
+
+    private JPanel mainPanel;
+    private JPanel authPanel;
+
+    private JButton enterButton;
+    private JButton exitButton;
+
+    JTextArea mainTextArea;
+
+    private JLabel usernameLabel;
+
+    private JTextField usernameTextField;
+
+    private JMenuBar menuBar;
+    private JMenu fileMenu;
+    private JMenuItem newItem;
+    private JMenuItem openItem;
+    private JMenuItem deleteItem;
+    private JMenuItem saveAsItem;
+    private JMenu userMenu;
+    private JMenuItem logOutItem;
+
+    public MainWindow(Client client) {
+        //client
+        this.client=client;
+        //authPanel
+//        authPanel = new JPanel(new GridLayout(2, 2, 1, 0));
+//        enterButton = new JButton("Enter bar");
+//        exitButton = new JButton("Exit");
+//        usernameLabel = new JLabel("Username");
+//        usernameTextField = new JTextField();
+//        addComponentsToAuthPanel();
+//        configureAuthPanelComponents();
+        //mainPanel
+        mainPanel = new JPanel(new BorderLayout());
+        mainTextArea = new JTextArea();
+        mainScrollPane = new JScrollPane(mainTextArea);
+        addComponentsToMainPanel();
+        configureMainPanelComponents();
+        //menu
+        menuBar = new JMenuBar();
+        fileMenu = new JMenu("File");
+        newItem = new JMenuItem("New");
+        openItem = new JMenuItem("Open...");
+        deleteItem = new JMenuItem("Delete file...");
+        saveAsItem = new JMenuItem("Save as...");
+        userMenu = new JMenu("User");
+        logOutItem = new JMenuItem("Log out");
+        configureMenu();
+        addMenuListeners();
+        setWindowPreferences();
+    }
+
+//    private void addComponentsToAuthPanel() {
+//        authPanel.add(usernameLabel);
+//        authPanel.add(usernameTextField);
+//        authPanel.add(exitButton);
+//        authPanel.add(enterButton);
+//    }
+//
+//    private void configureAuthPanelComponents() {
+//        usernameLabel.setFont(WindowConfig.getTextFont());
+//        enterButton.setFont(WindowConfig.getTextFont());
+//        exitButton.setFont(WindowConfig.getTextFont());
+//    }
+
+    private void addComponentsToMainPanel() {
+        mainPanel.add(mainScrollPane, BorderLayout.CENTER);
+    }
+
+    private void configureMainPanelComponents() {
+
+    }
+
+    private void setWindowPreferences() {
+//        showAuthPanel();
+        showMainPanel();
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setResizable(false);
+    }
+
+//    private void showAuthPanel() {
+//        setTitle("Who are you?");
+//        setIconImage(ResourceLoader.getImage("icon/who-are-you.png"));
+//
+//        clientId = null;
+//        clientName = null;
+//        orderTableModel.removeAllRows();
+//        usernameButton.setText("");
+//
+//        JComponent contentPane = (JPanel) MainWindow.this.getContentPane();
+//        contentPane.removeAll();
+//        contentPane.setLayout(new BorderLayout());
+//        contentPane.add(authPanel, BorderLayout.CENTER);
+//        contentPane.revalidate();
+//        contentPane.repaint();
+//
+//        menuBar.setVisible(false);
+//        setBounds(0, 0, WindowConfig.getAuthScreenWidth(), WindowConfig.getAuthScreenHeight());
+//    }
+
+    private void showMainPanel() {
+        setTitle("Client app ");
+//        setIconImage(ResourceLoader.getImage("icon/client.png"));
+
+//        clientId = clientService.createUniqueID();
+//        clientName = usernameTextField.getText();
+//        usernameButton.setText("Client: " + clientName);
+
+        JComponent contentPane = (JPanel) MainWindow.this.getContentPane();
+        contentPane.removeAll();
+        contentPane.setLayout(new BorderLayout());
+        contentPane.add(mainPanel, BorderLayout.CENTER);
+        contentPane.revalidate();
+        contentPane.repaint();
+
+        menuBar.setVisible(true);
+//        MainWindow.this
+//            .setBounds(0, 0, WindowConfig.getScreenWidth(), WindowConfig.getScreenHeight());
+        MainWindow.this
+            .setBounds(0, 0, 800, 600);
+    }
+
+    private void configureMenu() {
+        menuBar = new JMenuBar();
+        fileMenu.add(newItem);
+        fileMenu.add(openItem);
+        fileMenu.addSeparator();
+        fileMenu.add(deleteItem);
+        fileMenu.add(saveAsItem);
+
+        userMenu.add(logOutItem);
+
+        menuBar.add(fileMenu);
+        menuBar.add(userMenu);
+        setJMenuBar(menuBar);
+
+        menuBar.setVisible(false);
+    }
+
+    private void addMenuListeners() {
+//        leaveItem.addActionListener(e -> showAuthPanel());
+        openItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    byte[] bytes=client.sendRequestForFileMessage("test1.txt");
+                    mainTextArea.setText(new String(bytes));
+                } catch (IOException exception){
+                    JOptionPane.showMessageDialog(MainWindow.this,
+                        "File is not found", "Warning", JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        });
+        saveAsItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    byte[] bytes=mainTextArea.getText().getBytes();
+                    client.sendSaveAsMessage("saved.txt",bytes);
+                } catch (IOException exception){
+                    JOptionPane.showMessageDialog(MainWindow.this,
+                        "File is not found", "Warning", JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        });
+    }
+
+}
