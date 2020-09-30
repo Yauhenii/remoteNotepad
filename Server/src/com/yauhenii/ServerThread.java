@@ -1,5 +1,7 @@
 package com.yauhenii;
 
+import com.yauhenii.scrambler.RSAScrambler;
+import com.yauhenii.scrambler.SerpentScrambler;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,17 +11,8 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.security.GeneralSecurityException;
-import java.security.Key;
-import java.security.KeyFactory;
-import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.logging.Logger;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 
 public class ServerThread extends Thread {
 
@@ -30,6 +23,7 @@ public class ServerThread extends Thread {
     private final static String echoMessage = "echo";
     private final static String acceptMessage = "accept";
     private final static String denyMessage = "deny";
+    private final static String generateMessage = "generate";
 
     private final static String storageFolderDestination = "/Users/zhenyamordan/Desktop/Учеба/4 курс 1 сем/КБРС/Task2/Server/storage/";
 
@@ -38,6 +32,9 @@ public class ServerThread extends Thread {
     private InputStream inputStream;
     private OutputStream outputStream;
 
+    private RSAScrambler rsaScrambler;
+    SerpentScrambler serpentScrambler;
+
     private static Logger log = Logger.getLogger(Server.class.getName());
 
     public ServerThread(Socket clientSocket) throws IOException {
@@ -45,6 +42,10 @@ public class ServerThread extends Thread {
         clientAddress = clientSocket.getInetAddress().getHostAddress();
         inputStream = clientSocket.getInputStream();
         outputStream = clientSocket.getOutputStream();
+
+        rsaScrambler = null;
+        serpentScrambler = null;
+
         start();
     }
 
@@ -58,12 +59,9 @@ public class ServerThread extends Thread {
             String command;
             String[] commandSplit;
             //Get public key
-            bytes=readBytes();
-            System.out.println("GOT PUBLIC KEY");
-            RSAScrambler rsaScrambler=new RSAScrambler(bytes);
+            receivePublicKey();
             //Send symmetric key
-            System.out.println("SEND SESSION KEY");
-
+            sendSessionKey();
 
             while (true) {
                 bytes = readBytes();
@@ -84,7 +82,7 @@ public class ServerThread extends Thread {
                         log.info(clientAddress + ": SENDING FILE... " + fileName);
                         writeBytes(bytes);
                         log.info(clientAddress + ": FILE SENT " + fileName);
-                    } catch (IOException exception){
+                    } catch (IOException exception) {
                         log.info(clientAddress + ": SENDING DENY MESSAGE... " + fileName);
                         writeBytes(denyMessage.getBytes());
                         log.info(clientAddress + ": FILE IS NOT FOUND " + fileName);
@@ -95,33 +93,59 @@ public class ServerThread extends Thread {
                     log.info(clientAddress + ": GOT ECHO MESSAGE ");
                     writeBytes(message.getBytes());
                     log.info(clientAddress + ": SENT ECHO MESSAGE BACK");
-                } else if (commandSplit[0].equals(saveMessage)){
+                } else if (commandSplit[0].equals(saveMessage)) {
                     String fileName = commandSplit[1];
                     log.info(clientAddress + ": GOT REQUEST FOR FILE SAVING " + fileName);
                     try {
-                    log.info(clientAddress + ": SENDING ACCEPT MESSAGE... " + fileName);
-                    writeBytes(acceptMessage.getBytes());
-                    bytes = readBytes();
-                    writeBytesToFile(bytes,fileName);
-                    } catch (IOException exception){
+                        log.info(clientAddress + ": SENDING ACCEPT MESSAGE... " + fileName);
+                        writeBytes(acceptMessage.getBytes());
+                        bytes = readBytes();
+                        writeBytesToFile(bytes, fileName);
+                    } catch (IOException exception) {
                         log.info(clientAddress + ": SENDING DENY MESSAGE... " + fileName);
                     }
 
+                } else if (commandSplit[0].equals(generateMessage)) {
+                    log.info(clientAddress + ": GET GENERATE MESSAGE");
+                    serpentScrambler = null;
+                    sendSessionKey();
                 } else {
                     log.info(clientAddress + ": INVALID COMMAND");
                 }
             }
-        } catch (Exception exception) {
+        } catch (
+            Exception exception) {
             log.warning(exception.getMessage());
         }
+
     }
 
-    private byte[] readBytes() throws IOException, IllegalBlockSizeException, BadPaddingException {
+    private void sendSessionKey() throws IOException, GeneralSecurityException {
+        log.info("SEND SESSION KEY");
+        serpentScrambler = new SerpentScrambler();
+        writeBytes(rsaScrambler.encrypt(serpentScrambler.getKey().getEncoded()), false);
+        writeBytes(rsaScrambler.encrypt(serpentScrambler.getIv()), false);
+        log.info("SESSION KEY IS SENT");
+    }
+
+    private void receivePublicKey() throws IOException, GeneralSecurityException {
+        byte[] bytes = null;
+        log.info("GET PUBLIC KEY");
+        bytes = readBytes();
+        rsaScrambler = new RSAScrambler(bytes);
+    }
+
+    private byte[] readBytes() throws IOException, GeneralSecurityException {
         int count;
         byte[] bytes = new byte[FILE_SIZE];
         while ((count = inputStream.read(bytes)) > 0) {
-            bytes=Arrays.copyOfRange(bytes, 0, count);
+            bytes = Arrays.copyOfRange(bytes, 0, count);
             break;
+        }
+        if (!isConnectionSecured()) {
+            log.warning("CONNECTION IS NOT SECURED");
+        } else {
+            bytes = serpentScrambler.decrypt(bytes);
         }
         return bytes;
     }
@@ -131,7 +155,24 @@ public class ServerThread extends Thread {
         return Files.readAllBytes(file.toPath());
     }
 
-    private void writeBytes(byte[] bytes) throws IOException, IllegalBlockSizeException, BadPaddingException {
+    private void writeBytes(byte[] bytes)
+        throws IOException, GeneralSecurityException {
+        if (!isConnectionSecured()) {
+            log.warning("CONNECTION IS NOT SECURED");
+        } else {
+            bytes = serpentScrambler.encrypt(bytes);
+        }
+        outputStream.write(bytes);
+        outputStream.flush();
+    }
+
+    private void writeBytes(byte[] bytes, boolean isSecured)
+        throws IOException, GeneralSecurityException {
+        if (!isConnectionSecured() || !isSecured) {
+            log.warning("CONNECTION IS NOT SECURED");
+        } else {
+            bytes = serpentScrambler.encrypt(bytes);
+        }
         outputStream.write(bytes);
         outputStream.flush();
     }
@@ -148,7 +189,15 @@ public class ServerThread extends Thread {
         try {
             clientSocket.close();
         } catch (IOException exception) {
-            System.out.println(exception.getMessage());
+            log.info(exception.getMessage());
+        }
+    }
+
+    private boolean isConnectionSecured() {
+        if (serpentScrambler != null) {
+            return true;
+        } else {
+            return false;
         }
     }
 }

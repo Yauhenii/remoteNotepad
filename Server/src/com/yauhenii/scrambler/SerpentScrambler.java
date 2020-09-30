@@ -1,4 +1,4 @@
-package com.yauhenii;
+package com.yauhenii.scrambler;
 
 import java.security.GeneralSecurityException;
 import javax.crypto.Cipher;
@@ -36,17 +36,6 @@ public class SerpentScrambler {
         decryptCipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
 
         return key;
-    }
-
-    public void changeKey(SecretKey key, byte[] iv) throws GeneralSecurityException{
-        this.key = key;
-        this.iv = iv;
-
-        encryptCipher = Cipher.getInstance("Serpent/CFB/NoPadding", "BC");
-        encryptCipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(iv));
-
-        decryptCipher = Cipher.getInstance("Serpent/CFB/NoPadding", "BC");
-        decryptCipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
     }
 
     public byte[] encrypt(byte[] data)

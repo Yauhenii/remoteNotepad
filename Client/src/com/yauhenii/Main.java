@@ -1,7 +1,9 @@
 package com.yauhenii;
 
+import com.yauhenii.gui.MainWindow;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.security.Security;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class Main {
 
@@ -11,10 +13,10 @@ public class Main {
     private static String remoteAddressString = "127.0.0.2";
 
     public static void main(String[] args) {
+        Security.addProvider(new BouncyCastleProvider());
         try {
             Client client = new Client(InetAddress.getByName(remoteAddressString), remotePort,
                 InetAddress.getByName(addressString), port);
-            client.start();
             MainWindow mainWindow = new MainWindow(client);
             mainWindow.setVisible(true);
         } catch (Exception exception) {

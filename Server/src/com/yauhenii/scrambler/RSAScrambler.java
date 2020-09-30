@@ -1,4 +1,4 @@
-package com.yauhenii;
+package com.yauhenii.scrambler;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;

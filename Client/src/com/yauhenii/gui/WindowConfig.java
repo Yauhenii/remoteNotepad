@@ -1,4 +1,4 @@
-package com.yauhenii;
+package com.yauhenii.gui;
 
 
 import java.awt.Font;

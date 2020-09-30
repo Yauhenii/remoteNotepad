@@ -1,10 +1,11 @@
-package com.yauhenii;
+package com.yauhenii.scrambler;
 
 import java.security.GeneralSecurityException;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import lombok.Getter;
 
 public class SerpentScrambler {
@@ -17,11 +18,11 @@ public class SerpentScrambler {
     private Cipher encryptCipher;
     private Cipher decryptCipher;
 
-    public SerpentScrambler(SecretKey key, byte[] iv) throws GeneralSecurityException {
+    public SerpentScrambler(byte[] encodedKey, byte[] iv) throws GeneralSecurityException {
         keyGenerator = KeyGenerator.getInstance("Serpent", "BC");
         keyGenerator.init(256);
 
-        this.key = key;
+        this.key = new SecretKeySpec(encodedKey,"Serpent");
         this.iv = iv;
 
         encryptCipher = Cipher.getInstance("Serpent/CFB/NoPadding", "BC");

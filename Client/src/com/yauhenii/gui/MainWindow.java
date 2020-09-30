@@ -1,10 +1,10 @@
-package com.yauhenii;
+package com.yauhenii.gui;
 
+import com.yauhenii.Client;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -47,6 +47,8 @@ public class MainWindow extends JFrame {
     private JMenuItem deleteItem;
     private JMenuItem saveAsItem;
     private JMenu userMenu;
+    private JMenuItem newKeyItem;
+    private JMenuItem showKeyItem;
     private JMenuItem logOutItem;
 
     public MainWindow(Client client) {
@@ -74,6 +76,8 @@ public class MainWindow extends JFrame {
         deleteItem = new JMenuItem("Delete file...");
         saveAsItem = new JMenuItem("Save as...");
         userMenu = new JMenu("User");
+        newKeyItem = new JMenuItem("Generate new key");
+        showKeyItem = new JMenuItem("Show key");
         logOutItem = new JMenuItem("Log out");
         configureMenu();
         addMenuListeners();
@@ -158,6 +162,9 @@ public class MainWindow extends JFrame {
         fileMenu.add(deleteItem);
         fileMenu.add(saveAsItem);
 
+        userMenu.add(newKeyItem);
+        userMenu.add(showKeyItem);
+        userMenu.addSeparator();
         userMenu.add(logOutItem);
 
         menuBar.add(fileMenu);
@@ -169,28 +176,24 @@ public class MainWindow extends JFrame {
 
     private void addMenuListeners() {
 //        leaveItem.addActionListener(e -> showAuthPanel());
-        openItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    FileNameDialog fileNameDialog = new FileNameDialog(MainWindow.this);
-                    fileNameDialog.setVisible(true);
-                    if (currentFileName != null) {
-                        byte[] bytes = client.sendRequestForFileMessage(currentFileName);
-                        mainTextArea.setText(new String(bytes));
-                    } else {
-                        JOptionPane.showMessageDialog(MainWindow.this,
-                            "No file name", "Warning", JOptionPane.WARNING_MESSAGE);
-                    }
-                } catch (IOException exception) {
+        openItem.addActionListener(e -> {
+            try {
+                FileNameDialog fileNameDialog = new FileNameDialog(MainWindow.this);
+                fileNameDialog.setVisible(true);
+                if (currentFileName != null) {
+                    byte[] bytes = client.sendRequestForFileMessage(currentFileName);
+                    mainTextArea.setText(new String(bytes));
+                } else {
                     JOptionPane.showMessageDialog(MainWindow.this,
-                        "File is not found", "Warning", JOptionPane.WARNING_MESSAGE);
+                        "No file name", "Warning", JOptionPane.WARNING_MESSAGE);
                 }
+            } catch (Exception exception) {
+                JOptionPane.showMessageDialog(MainWindow.this,
+                    "File is not found", "Warning", JOptionPane.WARNING_MESSAGE);
             }
         });
-        saveAsItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+        saveAsItem.addActionListener(e -> {
+            if(mainTextArea.getText()!=""){
                 try {
                     FileNameDialog fileNameDialog = new FileNameDialog(MainWindow.this);
                     fileNameDialog.setVisible(true);
@@ -202,24 +205,54 @@ public class MainWindow extends JFrame {
                         JOptionPane.showMessageDialog(MainWindow.this,
                             "No file name", "Warning", JOptionPane.WARNING_MESSAGE);
                     }
-                } catch (IOException exception) {
+                } catch (Exception exception) {
                     JOptionPane.showMessageDialog(MainWindow.this,
                         "File is not found", "Warning", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
-        logOutItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    client.sendEndMessage();
-                    MainWindow.this.dispatchEvent(new WindowEvent(MainWindow.this, WindowEvent.WINDOW_CLOSING));
-                } catch (IOException exception){
-                    JOptionPane.showMessageDialog(MainWindow.this,
-                        "Can not log out", "Warning", JOptionPane.WARNING_MESSAGE);
+        logOutItem.addActionListener(e -> {
+            try {
+                client.sendEndMessage();
+                MainWindow.this
+                    .dispatchEvent(new WindowEvent(MainWindow.this, WindowEvent.WINDOW_CLOSING));
+            } catch (Exception exception) {
+                JOptionPane.showMessageDialog(MainWindow.this,
+                    "Can not log out", "Warning", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+        newItem.addActionListener(e -> {
+            Object[] options = {"Cancel", "No", "Yes"};
+            int option;
+            if (mainTextArea.getText() != "") {
+                option = JOptionPane.showOptionDialog(MainWindow.this,
+                    "Do you want to save your work?",
+                    "New file",
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    options,
+                    options[2]);
+                if (option == 0) {
+
+                } else if (option == 1) {
+                    mainTextArea.setText("");
+                } else if (option == 2) {
+                    saveAsItem.doClick();
+                    mainTextArea.setText("");
                 }
             }
         });
+        newKeyItem.addActionListener(e -> {
+            try {
+                client.sendGenerateMessage();
+            } catch (Exception exception) {
+                JOptionPane.showMessageDialog(MainWindow.this,
+                    "Can not log out", "Warning", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+        showKeyItem.addActionListener(e -> JOptionPane.showMessageDialog(MainWindow.this,
+            client.getSessionKey(), "Info", JOptionPane.INFORMATION_MESSAGE));
     }
 
 //    public void setCurrentFileName(String currentFileName) {
