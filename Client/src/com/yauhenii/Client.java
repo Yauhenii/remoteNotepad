@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.file.NoSuchFileException;
+import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -30,7 +31,6 @@ public class Client {
     private final static String saveMessage = "save";
     private final static String acceptMessage = "accept";
     private final static String denyMessage = "deny";
-    private final static String storageFolderDestination = "/Users/zhenyamordan/Desktop/Учеба/4 курс 1 сем/КБРС/Task2/Client/storage/";
 
     private Socket clientSocket;
     private InputStream inputStream;
@@ -41,34 +41,32 @@ public class Client {
     InetAddress address;
     InetAddress remoteAddress;
 
-    KeyPair keyPair;
-    Cipher decryptCipher;
+    RSAScrambler rsaScrambler;
 
     private static Logger log = Logger.getLogger(Client.class.getName());
 
     public Client(InetAddress remoteAddress, int remotePort, InetAddress address, int port)
-        throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+        throws GeneralSecurityException {
         this.port = port;
         this.remotePort = remotePort;
         this.address = address;
         this.remoteAddress = remoteAddress;
+
+        rsaScrambler=new RSAScrambler();
     }
 
-    public void start() throws Exception{
-            clientSocket = new Socket(remoteAddress, remotePort, address, port);
-            inputStream = clientSocket.getInputStream();
-            outputStream = clientSocket.getOutputStream();
-            log.info("CLIENT IS RUN");
+    public void start() throws Exception {
+        clientSocket = new Socket(remoteAddress, remotePort, address, port);
+        inputStream = clientSocket.getInputStream();
+        outputStream = clientSocket.getOutputStream();
+        log.info("CLIENT IS RUN");
 
-            //Send public key
-            keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
-            decryptCipher = Cipher.getInstance("RSA");
-            decryptCipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
-            System.out.println("PUBLIC KEY IS SENT");
-            writeBytes(keyPair.getPublic().getEncoded());
+        sendPublicKey();
+    }
 
-            System.out.println(new String(decryptCipher.doFinal(readBytes())));
-
+    public void sendPublicKey() throws IOException {
+        writeBytes(rsaScrambler.getPublicKey().getEncoded());
+        System.out.println("PUBLIC KEY IS SENT");
     }
 
     public void sendEndMessage() throws IOException {
@@ -79,7 +77,7 @@ public class Client {
 
     public byte[] sendRequestForFileMessage(String fileName) throws IOException {
         byte[] bytes = null;
-        writeBytes((requestMessage+" "+fileName).getBytes());
+        writeBytes((requestMessage + " " + fileName).getBytes());
         log.info("REQUEST FILE BY NAME: " + fileName);
         String message = new String(readBytes());
         if (message.equals(acceptMessage)) {
@@ -93,8 +91,8 @@ public class Client {
         return bytes;
     }
 
-    public void sendSaveAsMessage(String fileName, byte[] bytes) throws IOException{
-        writeBytes((saveMessage+" "+fileName).getBytes());
+    public void sendSaveAsMessage(String fileName, byte[] bytes) throws IOException {
+        writeBytes((saveMessage + " " + fileName).getBytes());
         log.info("SAVE FILE AS: " + fileName);
         String message = new String(readBytes());
         if (message.equals(acceptMessage)) {
@@ -127,33 +125,5 @@ public class Client {
         } catch (IOException exception) {
             System.out.println(exception.getMessage());
         }
-    }
-
-    //    https://stackoverflow.com/questions/9520911/java-sending-and-receiving-file-byte-over-sockets
-
-//    private void writeFile(String fileName, InputStream inputStream) throws IOException {
-//        FileOutputStream fileOutputStream = new FileOutputStream(
-//            storageFolderDestination + fileName);
-//        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
-//        int count;
-//        byte[] bytes = new byte[FILE_SIZE];
-//        if () {
-//            count = inputStream.read(bytes);
-//        }
-//        bufferedOutputStream.write(bytes, 0, count);
-//        bufferedOutputStream.flush();
-//    }
-
-    private void writeBytesToFile(byte[] bytes, String fileName) throws IOException {
-        FileOutputStream fileOutputStream = new FileOutputStream(
-            storageFolderDestination + fileName);
-        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
-        bufferedOutputStream.write(bytes, 0, bytes.length);
-        bufferedOutputStream.flush();
-    }
-
-    private void writeBytesToConsole(byte[] bytes) throws IOException {
-        System.out.write(bytes, 0, bytes.length);
-        System.out.flush();
     }
 }

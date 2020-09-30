@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.PublicKey;
@@ -17,6 +18,8 @@ import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 
 public class ServerThread extends Thread {
 
@@ -36,11 +39,6 @@ public class ServerThread extends Thread {
     private OutputStream outputStream;
 
     private static Logger log = Logger.getLogger(Server.class.getName());
-
-    Key keyAES;
-    PublicKey publicKeyRSA;
-    Cipher cipherAES;
-    Cipher encryptCipherRSA;
 
     public ServerThread(Socket clientSocket) throws IOException {
         this.clientSocket = clientSocket;
@@ -62,12 +60,10 @@ public class ServerThread extends Thread {
             //Get public key
             bytes=readBytes();
             System.out.println("GOT PUBLIC KEY");
-            encryptCipherRSA = Cipher.getInstance("RSA");
-            publicKeyRSA = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(bytes));
-            encryptCipherRSA.init(Cipher.ENCRYPT_MODE, publicKeyRSA);
-            //Generate and send AES key
+            RSAScrambler rsaScrambler=new RSAScrambler(bytes);
+            //Send symmetric key
+            System.out.println("SEND SESSION KEY");
 
-            writeBytes(encryptCipherRSA.doFinal("hello".getBytes()));
 
             while (true) {
                 bytes = readBytes();

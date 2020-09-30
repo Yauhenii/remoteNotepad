@@ -18,10 +18,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
+import lombok.Setter;
 
 public class MainWindow extends JFrame {
 
     private Client client;
+    @Setter
     private String currentFileName;
 
     private JScrollPane mainScrollPane;
@@ -127,7 +129,7 @@ public class MainWindow extends JFrame {
 //    }
 
     private void showMainPanel() {
-        setTitle("Client app ");
+        setTitle("Client app");
 //        setIconImage(ResourceLoader.getImage("icon/client.png"));
 
 //        clientId = clientService.createUniqueID();
@@ -220,7 +222,7 @@ public class MainWindow extends JFrame {
         });
     }
 
-    public void setCurrentFileName(String currentFileName) {
-        this.currentFileName = currentFileName;
-    }
+//    public void setCurrentFileName(String currentFileName) {
+//        this.currentFileName = currentFileName;
+//    }
 }

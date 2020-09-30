@@ -1,5 +1,6 @@
 package com.yauhenii;
 
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,9 +13,8 @@ import javax.swing.JTextField;
 
 public class FileNameDialog extends JDialog {
 
-    private String fileName;
-
     private JPanel mainPanel;
+    private JLabel fileNameLabel;
     private JTextField fileNameField;
     private JButton acceptButton;
     private JButton cancelButton;
@@ -24,16 +24,25 @@ public class FileNameDialog extends JDialog {
     public FileNameDialog(MainWindow owner) {
         super(owner,true);
         this.owner=owner;
-        fileName=null;
 
         mainPanel=new JPanel(new GridLayout(2,2));
+        fileNameLabel=new JLabel("File name ");
         fileNameField=new JTextField();
         acceptButton=new JButton("Accept");
         cancelButton=new JButton("Cancel");
 
         addComponents();
         addListeners();
+        configureComponents();
         setWindowPreferences();
+    }
+
+    private void configureComponents() {
+//        fileNameLabel.setFont(WindowConfig.getFileNameDialogTextFont());
+//        fileNameField.setFont(WindowConfig.getFileNameDialogTextFont());
+//        acceptButton.setFont(WindowConfig.getFileNameDialogTextFont());
+//        cancelButton.setFont(WindowConfig.getFileNameDialogTextFont());
+
     }
 
     private void addListeners() {
@@ -48,7 +57,7 @@ public class FileNameDialog extends JDialog {
     }
 
     private void addComponents() {
-        mainPanel.add(new JLabel("File name:"));
+        mainPanel.add(fileNameLabel);
         mainPanel.add(fileNameField);
         mainPanel.add(acceptButton);
         mainPanel.add(cancelButton);
@@ -58,7 +67,7 @@ public class FileNameDialog extends JDialog {
         setTitle("File name dialog");
 //        setIconImage(ResourceLoader.getImage("icon/order-info.png"));
         setContentPane(mainPanel);
-//        setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
+        setPreferredSize(new Dimension(400, 200));
         setResizable(false);
         pack();
     }
