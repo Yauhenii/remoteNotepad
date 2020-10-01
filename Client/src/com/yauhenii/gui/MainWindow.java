@@ -1,6 +1,6 @@
 package com.yauhenii.gui;
 
-import com.yauhenii.Client;
+import com.yauhenii.client.Client;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -25,6 +25,7 @@ import lombok.Setter;
 public class MainWindow extends JFrame {
 
     private Client client;
+    private String userName;
     @Setter
     private String currentFileName;
 
@@ -123,8 +124,6 @@ public class MainWindow extends JFrame {
         setTitle("Log in");
 //        setIconImage(ResourceLoader.getImage("icon/who-are-you.png"));
 
-
-
         JComponent contentPane = (JPanel) MainWindow.this.getContentPane();
         contentPane.removeAll();
         contentPane.setLayout(new BorderLayout());
@@ -137,12 +136,8 @@ public class MainWindow extends JFrame {
     }
 
     private void showMainPanel() {
-        setTitle("Client app");
+        setTitle("Client app: " + userName);
 //        setIconImage(ResourceLoader.getImage("icon/client.png"));
-
-//        clientId = clientService.createUniqueID();
-//        clientName = usernameTextField.getText();
-//        usernameButton.setText("Client: " + clientName);
 
         JComponent contentPane = (JPanel) MainWindow.this.getContentPane();
         contentPane.removeAll();
@@ -184,9 +179,6 @@ public class MainWindow extends JFrame {
                 if (currentFileName != null) {
                     byte[] bytes = client.sendRequestForFileMessage(currentFileName);
                     mainTextArea.setText(new String(bytes));
-                } else {
-                    JOptionPane.showMessageDialog(MainWindow.this,
-                        "No file name", "Warning", JOptionPane.WARNING_MESSAGE);
                 }
             } catch (Exception exception) {
                 JOptionPane.showMessageDialog(MainWindow.this,
@@ -233,9 +225,7 @@ public class MainWindow extends JFrame {
                     null,
                     options,
                     options[2]);
-                if (option == 0) {
-
-                } else if (option == 1) {
+                if (option == 1) {
                     mainTextArea.setText("");
                 } else if (option == 2) {
                     saveAsItem.doClick();
@@ -253,44 +243,35 @@ public class MainWindow extends JFrame {
         });
         showKeyItem.addActionListener(e -> JOptionPane.showMessageDialog(MainWindow.this,
             client.getSessionKey(), "Info", JOptionPane.INFORMATION_MESSAGE));
-        enterButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    String username = usernameTextField.getText();
-                    String password = new String(passwordField.getPassword());
-                    if(client.sendLogInMessage(username + "-" + password)){
-                        showMainPanel();
-                    } else{
-                        JOptionPane.showMessageDialog(MainWindow.this,
-                            "Invalid credentials", "Warning", JOptionPane.WARNING_MESSAGE);
-                    }
-                } catch (Exception exception){
+        enterButton.addActionListener(e -> {
+            try {
+                String userName = usernameTextField.getText();
+                MainWindow.this.userName = userName;
+                String password = new String(passwordField.getPassword());
+                if (client.sendLogInMessage(userName + "-" + password)) {
+                    showMainPanel();
+                } else {
                     JOptionPane.showMessageDialog(MainWindow.this,
-                        "Can log in", "Warning", JOptionPane.WARNING_MESSAGE);
+                        "Invalid credentials", "Warning", JOptionPane.WARNING_MESSAGE);
                 }
+            } catch (Exception exception) {
+                JOptionPane.showMessageDialog(MainWindow.this,
+                    "Can log in", "Warning", JOptionPane.WARNING_MESSAGE);
             }
         });
         exitButton.addActionListener(e -> MainWindow.this
             .dispatchEvent(new WindowEvent(MainWindow.this, WindowEvent.WINDOW_CLOSING)));
-        deleteItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    FileNameDialog fileNameDialog = new FileNameDialog(MainWindow.this);
-                    fileNameDialog.setVisible(true);
-                    if (currentFileName != null) {
-                        client.sendDeleteFileMessage(currentFileName);
-                    }
-                } catch (Exception exception) {
-                    JOptionPane.showMessageDialog(MainWindow.this,
-                        "File is not found", "Warning", JOptionPane.WARNING_MESSAGE);
+        deleteItem.addActionListener(e -> {
+            try {
+                FileNameDialog fileNameDialog = new FileNameDialog(MainWindow.this);
+                fileNameDialog.setVisible(true);
+                if (currentFileName != null) {
+                    client.sendDeleteFileMessage(currentFileName);
                 }
+            } catch (Exception exception) {
+                JOptionPane.showMessageDialog(MainWindow.this,
+                    "File is not found", "Warning", JOptionPane.WARNING_MESSAGE);
             }
         });
     }
-
-//    public void setCurrentFileName(String currentFileName) {
-//        this.currentFileName = currentFileName;
-//    }
 }

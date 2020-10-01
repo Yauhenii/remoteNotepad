@@ -1,5 +1,6 @@
 package com.yauhenii;
 
+import com.yauhenii.client.Client;
 import com.yauhenii.gui.MainWindow;
 import java.net.InetAddress;
 import java.security.Security;
@@ -8,7 +9,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 public class Main {
 
     private static int port = 4000;
-    private static String addressString = "127.0.0.4";
+    private static String addressString = "127.0.0.3";
     private static int remotePort = 4004;
     private static String remoteAddressString = "127.0.0.2";
 

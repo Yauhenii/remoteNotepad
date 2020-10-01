@@ -1,4 +1,4 @@
-package com.yauhenii;
+package com.yauhenii.utils;
 
 import java.io.FileReader;
 import java.io.IOException;

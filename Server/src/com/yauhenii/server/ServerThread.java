@@ -1,5 +1,7 @@
-package com.yauhenii;
+package com.yauhenii.server;
 
+import com.yauhenii.utils.Command;
+import com.yauhenii.utils.CredentialsService;
 import com.yauhenii.scrambler.RSAScrambler;
 import com.yauhenii.scrambler.SerpentScrambler;
 import java.io.BufferedOutputStream;

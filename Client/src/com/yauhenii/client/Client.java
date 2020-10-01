@@ -1,4 +1,4 @@
-package com.yauhenii;
+package com.yauhenii.client;
 
 import com.yauhenii.scrambler.RSAScrambler;
 import com.yauhenii.scrambler.SerpentScrambler;
@@ -158,7 +158,7 @@ public class Client {
     //utils
 
     private byte[] readBytes() throws IOException, GeneralSecurityException {
-        byte[] bytes = null;
+        byte[] bytes;
         int count;
         bytes = new byte[FILE_SIZE];
         while ((count = inputStream.read(bytes)) > 0) {
@@ -200,10 +200,6 @@ public class Client {
     }
 
     private boolean isConnectionSecured() {
-        if (serpentScrambler != null) {
-            return true;
-        } else {
-            return false;
-        }
+        return serpentScrambler != null;
     }
 }

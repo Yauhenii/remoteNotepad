@@ -1,5 +1,6 @@
 package com.yauhenii;
 
+import com.yauhenii.server.Server;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.Security;

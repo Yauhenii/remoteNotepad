@@ -1,39 +1,20 @@
 package com.yauhenii.gui;
 
 
-import java.awt.Font;
 import lombok.Getter;
 
 public class WindowConfig {
 
     private static final int MAC_OS_X = 0;
     private static final int WINDOWS = 1;
-    //
     //main window
-//    private static final Font[] HEADER_FONT = new Font[]{new Font("Serif", Font.PLAIN, 30),
-//        new Font("Serif", Font.PLAIN, 30)};
-//    private static final Font[] TEXT_FONT = new Font[]{new Font("Serif", Font.PLAIN, 20),
-//        new Font("Serif", Font.PLAIN, 20)};
-//    private static final Color MENU_BAR_COLOR = Color.CYAN;
     private static final int[] SCREEN_WIDTH = new int[]{800, 1000};
     private static final int[] SCREEN_HEIGHT = new int[]{600, 800};
     //file name dialog
-//    private static final Font[] INFO_DIALOG_HEADER_FONT = new Font[]{
-//        new Font("Serif", Font.PLAIN, 20), new Font("Serif", Font.PLAIN, 20)
-//    };
-    private static final Font[] INFO_DIALOG_TEXT_FONT = new Font[]{
-        new Font("Serif", Font.PLAIN, 15), new Font("Serif", Font.PLAIN, 15)
-    };
     private static final int[] FILE_NAME_DIALOG_SCREEN_WIDTH = {200, 300};
     private static final int[] FILE_NAME_DIALOG_SCREEN_HEIGHT = {90, 300};
     //
-    private static final int sys;
-    //    @Getter
-//    private static final Font headerFont;
-//    @Getter
-//    private static final Font textFont;
-//    @Getter
-//    private static final Color menuBarColor;
+    private static final int SYS;
     @Getter
     private static final int screenWidth;
     @Getter
@@ -42,38 +23,23 @@ public class WindowConfig {
     private static final int authScreenWidth;
     @Getter
     private static final int authScreenHeight;
-    //    @Getter
-//    private static final Font infoDialogHeaderFont;
-//    @Getter
-//    private static final Font fileNameDialogTextFont;
     @Getter
     private static final int fileNameDialogScreenWidth;
     @Getter
     private static final int fileNameDialogScreenHeight;
 
-    //
-//
     static {
         if (System.getProperty("os.name").equals("Mac OS X")) {
-            sys = MAC_OS_X;
+            SYS = MAC_OS_X;
         } else {
-            sys = WINDOWS;
+            SYS = WINDOWS;
         }
-//        headerFont = HEADER_FONT[sys];
-//        textFont = TEXT_FONT[sys];
-//        menuBarColor = MENU_BAR_COLOR;
-        screenWidth = SCREEN_WIDTH[sys];
-        screenHeight = SCREEN_HEIGHT[sys];
-//        infoDialogHeaderFont = INFO_DIALOG_HEADER_FONT[sys];
-//        infoDialogTextFontFont = INFO_DIALOG_TEXT_FONT[sys];
-        fileNameDialogScreenWidth = FILE_NAME_DIALOG_SCREEN_WIDTH[sys];
-        fileNameDialogScreenHeight = FILE_NAME_DIALOG_SCREEN_HEIGHT[sys];
+        screenWidth = SCREEN_WIDTH[SYS];
+        screenHeight = SCREEN_HEIGHT[SYS];
+        fileNameDialogScreenWidth = FILE_NAME_DIALOG_SCREEN_WIDTH[SYS];
+        fileNameDialogScreenHeight = FILE_NAME_DIALOG_SCREEN_HEIGHT[SYS];
 
         authScreenWidth = screenWidth / 4;
         authScreenHeight = screenHeight / 7;
     }
-//
-//    private WindowConfig() {
-//    }
-
 }

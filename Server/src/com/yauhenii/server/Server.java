@@ -1,4 +1,4 @@
-package com.yauhenii;
+package com.yauhenii.server;
 
 import java.io.IOException;
 import java.net.InetAddress;
