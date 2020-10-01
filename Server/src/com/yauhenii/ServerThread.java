@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import org.json.simple.parser.ParseException;
 
 public class ServerThread extends Thread {
 
@@ -25,8 +26,12 @@ public class ServerThread extends Thread {
     private final static String acceptMessage = "accept";
     private final static String denyMessage = "deny";
     private final static String generateMessage = "generate";
+    private final static String DELETE_MESSAGE = "delete";
+    private final static String LOG_IN_MESSAGE = "login";
 
-    private final static String storageFolderDestination = "/Users/zhenyamordan/Desktop/Учеба/4 курс 1 сем/КБРС/Task2/Server/storage/";
+    private final static String CREDENTIALS_DESTINATION = "/Users/zhenyamordan/Desktop/Учеба/4 курс 1 сем/КБРС/Task2/Server/resourses/credentials.properties";
+    private final static String STORAGE_FOLDER_DESTINATION = "/Users/zhenyamordan/Desktop/Учеба/4 курс 1 сем/КБРС/Task2/Server/storage/";
+
 
     private Socket clientSocket;
     private String clientAddress;
@@ -35,12 +40,13 @@ public class ServerThread extends Thread {
 
     private RSAScrambler rsaScrambler;
     private SerpentScrambler serpentScrambler;
+    private CredentialsService credentialsService;
 
     private Map<String, Command> messagesMap;
 
     private static Logger log = Logger.getLogger(Server.class.getName());
 
-    public ServerThread(Socket clientSocket) throws IOException {
+    public ServerThread(Socket clientSocket) throws IOException, ParseException {
         this.clientSocket = clientSocket;
         clientAddress = clientSocket.getInetAddress().getHostAddress();
         inputStream = clientSocket.getInputStream();
@@ -48,6 +54,7 @@ public class ServerThread extends Thread {
 
         rsaScrambler = null;
         serpentScrambler = null;
+        credentialsService = new CredentialsService(CREDENTIALS_DESTINATION);
 
         messagesMap = new HashMap<>();
 
@@ -75,6 +82,20 @@ public class ServerThread extends Thread {
         messagesMap.put(generateMessage, message -> {
             try {
                 receiveGenerateMessage();
+            } catch (Exception exception) {
+                log.warning(exception.getMessage());
+            }
+        });
+        messagesMap.put(DELETE_MESSAGE, string -> {
+            try {
+                receiveDeleteMessage(string);
+            } catch (Exception exception) {
+                log.warning(exception.getMessage());
+            }
+        });
+        messagesMap.put(LOG_IN_MESSAGE, string -> {
+            try {
+                receiveLogInMessage(string);
             } catch (Exception exception) {
                 log.warning(exception.getMessage());
             }
@@ -112,6 +133,37 @@ public class ServerThread extends Thread {
             log.warning(clientAddress + ": CONNECTION IS CLOSED");
         }
 
+    }
+
+    public void receiveLogInMessage(String credentials)
+        throws IOException, GeneralSecurityException {
+        log.info(clientAddress + ": GOT REQUEST FOR LOG IN ");
+        String[] credentials_split = credentials.split("-");
+        String name = credentials_split[0];
+        String password = credentials_split[1];
+        if (credentialsService.checkCredentials(name, password)) {
+            log.info(clientAddress + ": SENDING ACCEPT MESSAGE... ");
+            writeBytes(acceptMessage.getBytes());
+            log.info(clientAddress + ": USER IS LOGGED IN ");
+        } else {
+            log.info(clientAddress + ": SENDING DENY MESSAGE... ");
+            writeBytes(denyMessage.getBytes());
+            log.info(clientAddress + ": INVALID CREDENTIALS ");
+        }
+    }
+
+    public void receiveDeleteMessage(String fileName)
+        throws IOException, GeneralSecurityException {
+        log.info(clientAddress + ": GOT REQUEST FOR DELETING FILE " + fileName);
+        if (deleteFile(fileName)) {
+            log.info(clientAddress + ": SENDING ACCEPT MESSAGE... " + fileName);
+            writeBytes(acceptMessage.getBytes());
+            log.info(clientAddress + ": FILE IS SUCCESSFULLY DELETED " + fileName);
+        } else {
+            log.info(clientAddress + ": SENDING DENY MESSAGE... " + fileName);
+            writeBytes(denyMessage.getBytes());
+            log.info(clientAddress + ": FILE IS NOT FOUND " + fileName);
+        }
     }
 
     public void receiveEndMessage() {
@@ -195,8 +247,13 @@ public class ServerThread extends Thread {
     }
 
     private byte[] readBytesFromFile(String filename) throws IOException {
-        File file = new File(storageFolderDestination + filename);
+        File file = new File(STORAGE_FOLDER_DESTINATION + filename);
         return Files.readAllBytes(file.toPath());
+    }
+
+    private boolean deleteFile(String filename) {
+        File file = new File(STORAGE_FOLDER_DESTINATION + filename);
+        return file.delete();
     }
 
     private void writeBytes(byte[] bytes)
@@ -223,7 +280,7 @@ public class ServerThread extends Thread {
 
     private void writeBytesToFile(byte[] bytes, String fileName) throws IOException {
         FileOutputStream fileOutputStream = new FileOutputStream(
-            storageFolderDestination + fileName);
+            STORAGE_FOLDER_DESTINATION + fileName);
         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
         bufferedOutputStream.write(bytes, 0, bytes.length);
         bufferedOutputStream.flush();

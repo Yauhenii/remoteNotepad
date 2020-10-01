@@ -16,12 +16,14 @@ import java.util.logging.Logger;
 public class Client {
 
     private final static int FILE_SIZE = 8192;//6022386;
-    private final static String endMessage = "exit";
-    private final static String requestMessage = "request";
-    private final static String saveMessage = "save";
-    private final static String acceptMessage = "accept";
-    private final static String denyMessage = "deny";
-    private final static String generateMessage = "generate";
+    private final static String END_MESSAGE = "exit";
+    private final static String REQUEST_MESSAGE = "request";
+    private final static String SAVE_MESSAGE = "save";
+    private final static String ACCEPT_MESSAGE = "accept";
+    private final static String DENY_MESSAGE = "deny";
+    private final static String GENERATE_MESSAGE = "generate";
+    private final static String DELETE_MESSAGE = "delete";
+    private final static String LOG_IN_MESSAGE = "login";
 
     private Socket clientSocket;
     private InputStream inputStream;
@@ -62,9 +64,24 @@ public class Client {
 
     }
 
+    public boolean sendLogInMessage(String credentials) throws IOException, GeneralSecurityException {
+        log.info("SEND LOG IN MESSAGE");
+        writeBytes((LOG_IN_MESSAGE+" "+credentials).getBytes());
+        String message = new String(readBytes());
+        if (message.equals(ACCEPT_MESSAGE)) {
+            log.info("CREDENTIALS ARE CORRECT");
+            return true;
+        } else if (message.equals(DENY_MESSAGE)) {
+            log.info("CREDENTIALS ARE INCORRECT");
+            return false;
+        } else {
+            return false;
+        }
+    }
+
     public void sendGenerateMessage() throws IOException, GeneralSecurityException {
         log.info("SEND GENERATE NEW SESSION KEY MESSAGE");
-        writeBytes(generateMessage.getBytes());
+        writeBytes(GENERATE_MESSAGE.getBytes());
         serpentScrambler = null;
         receiveSessionKey();
         log.info("SESSION KEY IS CHANGED");
@@ -72,23 +89,37 @@ public class Client {
 
     public void sendEndMessage() throws IOException, GeneralSecurityException {
         log.info("SEND END MESSAGE");
-        writeBytes(endMessage.getBytes());
+        writeBytes(END_MESSAGE.getBytes());
         stop();
         log.info("CONNECTION ABORTED");
+    }
+
+    public void sendDeleteFileMessage(String fileName)
+        throws IOException, GeneralSecurityException {
+        log.info("SEND DELETE MESSAGE");
+        writeBytes((DELETE_MESSAGE + " " + fileName).getBytes());
+        log.info("DELETE FILE BY NAME: " + fileName);
+        String message = new String(readBytes());
+        if (message.equals(ACCEPT_MESSAGE)) {
+            log.info("FILE IS SUCCESSFULLY DELETED");
+        } else if (message.equals(DENY_MESSAGE)) {
+            log.info("FILE IS NOT FOUND");
+            throw new NoSuchFileException(fileName);
+        }
     }
 
     public byte[] sendRequestForFileMessage(String fileName)
         throws IOException, GeneralSecurityException {
         log.info("SEND REQUEST MESSAGE");
         byte[] bytes = null;
-        writeBytes((requestMessage + " " + fileName).getBytes());
+        writeBytes((REQUEST_MESSAGE + " " + fileName).getBytes());
         log.info("REQUEST FILE BY NAME: " + fileName);
         String message = new String(readBytes());
-        if (message.equals(acceptMessage)) {
+        if (message.equals(ACCEPT_MESSAGE)) {
             log.info("RECEIVING FILE...");
             bytes = readBytes();
             log.info("FILE IS SUCCESSFULLY RECEIVED AND WROTE");
-        } else if (message.equals(denyMessage)) {
+        } else if (message.equals(DENY_MESSAGE)) {
             log.info("FILE IS NOT FOUND");
             throw new NoSuchFileException(fileName);
         }
@@ -98,14 +129,14 @@ public class Client {
     public void sendSaveAsMessage(String fileName, byte[] bytes)
         throws IOException, GeneralSecurityException {
         log.info("SEND SAVE AS MESSAGE");
-        writeBytes((saveMessage + " " + fileName).getBytes());
+        writeBytes((SAVE_MESSAGE + " " + fileName).getBytes());
         log.info("SAVE FILE AS: " + fileName);
         String message = new String(readBytes());
-        if (message.equals(acceptMessage)) {
+        if (message.equals(ACCEPT_MESSAGE)) {
             log.info("SENDING FILE...");
             writeBytes(bytes);
             log.info("FILE IS SENT");
-        } else if (message.equals(denyMessage)) {
+        } else if (message.equals(DENY_MESSAGE)) {
             log.warning("UNEXPECTED ERROR");
         }
     }

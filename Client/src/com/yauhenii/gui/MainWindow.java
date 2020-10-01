@@ -15,6 +15,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -37,9 +38,10 @@ public class MainWindow extends JFrame {
 
     JTextArea mainTextArea;
 
-//    private JLabel usernameLabel;
-//
-//    private JTextField usernameTextField;
+    private JLabel usernameLabel;
+    private JLabel passwordLabel;
+    private JTextField usernameTextField;
+    private JPasswordField passwordField;
 
     private JMenuBar menuBar;
     private JMenu fileMenu;
@@ -56,11 +58,13 @@ public class MainWindow extends JFrame {
         //client
         this.client = client;
         //authPanel
-        authPanel = new JPanel(new GridLayout(2, 1));
+        authPanel = new JPanel(new GridLayout(3, 2));
         enterButton = new JButton("Log in");
         exitButton = new JButton("Exit");
-//        usernameLabel = new JLabel("Username");
-//        usernameTextField = new JTextField();
+        usernameLabel = new JLabel("Username");
+        usernameTextField = new JTextField();
+        passwordLabel = new JLabel("Password");
+        passwordField = new JPasswordField();
         addComponentsToAuthPanel();
 //        configureAuthPanelComponents();
         //mainPanel
@@ -86,8 +90,10 @@ public class MainWindow extends JFrame {
     }
 
     private void addComponentsToAuthPanel() {
-//        authPanel.add(usernameLabel);
-//        authPanel.add(usernameTextField);
+        authPanel.add(usernameLabel);
+        authPanel.add(usernameTextField);
+        authPanel.add(passwordLabel);
+        authPanel.add(passwordField);
         authPanel.add(enterButton);
         authPanel.add(exitButton);
     }
@@ -107,8 +113,8 @@ public class MainWindow extends JFrame {
     }
 
     private void setWindowPreferences() {
-//        showAuthPanel();
-        showMainPanel();
+        showAuthPanel();
+//        showMainPanel();
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
     }
@@ -117,10 +123,7 @@ public class MainWindow extends JFrame {
         setTitle("Log in");
 //        setIconImage(ResourceLoader.getImage("icon/who-are-you.png"));
 
-//        clientId = null;
-//        clientName = null;
-//        orderTableModel.removeAllRows();
-//        usernameButton.setText("");
+
 
         JComponent contentPane = (JPanel) MainWindow.this.getContentPane();
         contentPane.removeAll();
@@ -149,10 +152,8 @@ public class MainWindow extends JFrame {
         contentPane.repaint();
 
         menuBar.setVisible(true);
-//        MainWindow.this
-//            .setBounds(0, 0, WindowConfig.getScreenWidth(), WindowConfig.getScreenHeight());
         MainWindow.this
-            .setBounds(0, 0, 800, 600);
+            .setBounds(0, 0, WindowConfig.getScreenWidth(), WindowConfig.getScreenHeight());
     }
 
     private void configureMenu() {
@@ -176,7 +177,6 @@ public class MainWindow extends JFrame {
     }
 
     private void addMenuListeners() {
-//        leaveItem.addActionListener(e -> showAuthPanel());
         openItem.addActionListener(e -> {
             try {
                 FileNameDialog fileNameDialog = new FileNameDialog(MainWindow.this);
@@ -256,7 +256,36 @@ public class MainWindow extends JFrame {
         enterButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                showMainPanel();
+                try {
+                    String username = usernameTextField.getText();
+                    String password = new String(passwordField.getPassword());
+                    if(client.sendLogInMessage(username + "-" + password)){
+                        showMainPanel();
+                    } else{
+                        JOptionPane.showMessageDialog(MainWindow.this,
+                            "Invalid credentials", "Warning", JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (Exception exception){
+                    JOptionPane.showMessageDialog(MainWindow.this,
+                        "Can log in", "Warning", JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        });
+        exitButton.addActionListener(e -> MainWindow.this
+            .dispatchEvent(new WindowEvent(MainWindow.this, WindowEvent.WINDOW_CLOSING)));
+        deleteItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    FileNameDialog fileNameDialog = new FileNameDialog(MainWindow.this);
+                    fileNameDialog.setVisible(true);
+                    if (currentFileName != null) {
+                        client.sendDeleteFileMessage(currentFileName);
+                    }
+                } catch (Exception exception) {
+                    JOptionPane.showMessageDialog(MainWindow.this,
+                        "File is not found", "Warning", JOptionPane.WARNING_MESSAGE);
+                }
             }
         });
     }

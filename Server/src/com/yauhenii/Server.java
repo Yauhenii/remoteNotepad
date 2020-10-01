@@ -38,7 +38,7 @@ public class Server {
                 serverThreads.add(new ServerThread(clientSocket));
             }
 
-        } catch (IOException exception) {
+        } catch (Exception exception) {
             System.out.println(exception.getMessage());
         }
     }

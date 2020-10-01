@@ -24,8 +24,8 @@ public class WindowConfig {
     private static final Font[] INFO_DIALOG_TEXT_FONT = new Font[]{
         new Font("Serif", Font.PLAIN, 15), new Font("Serif", Font.PLAIN, 15)
     };
-    private static final int[] FILE_NAME_DIALOG_SCREEN_WIDTH = {170, 300};
-    private static final int[] FILE_NAME_DIALOG_SCREEN_HEIGHT = {100, 300};
+    private static final int[] FILE_NAME_DIALOG_SCREEN_WIDTH = {200, 300};
+    private static final int[] FILE_NAME_DIALOG_SCREEN_HEIGHT = {90, 300};
     //
     private static final int sys;
     //    @Getter
