@@ -259,8 +259,11 @@ public class MainWindow extends JFrame {
                     "Can log in", "Warning", JOptionPane.WARNING_MESSAGE);
             }
         });
-        exitButton.addActionListener(e -> MainWindow.this
-            .dispatchEvent(new WindowEvent(MainWindow.this, WindowEvent.WINDOW_CLOSING)));
+        exitButton.addActionListener(e -> {
+            client.stop();
+            MainWindow.this
+                .dispatchEvent(new WindowEvent(MainWindow.this, WindowEvent.WINDOW_CLOSING));
+        });
         deleteItem.addActionListener(e -> {
             try {
                 FileNameDialog fileNameDialog = new FileNameDialog(MainWindow.this);

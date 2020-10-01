@@ -65,6 +65,8 @@ public class Client {
     }
 
     public boolean sendLogInMessage(String credentials) throws IOException, GeneralSecurityException {
+        checkKeyExpiration();
+
         log.info("SEND LOG IN MESSAGE");
         writeBytes((LOG_IN_MESSAGE+" "+credentials).getBytes());
         String message = new String(readBytes());
@@ -88,6 +90,8 @@ public class Client {
     }
 
     public void sendEndMessage() throws IOException, GeneralSecurityException {
+        checkKeyExpiration();
+
         log.info("SEND END MESSAGE");
         writeBytes(END_MESSAGE.getBytes());
         stop();
@@ -96,6 +100,8 @@ public class Client {
 
     public void sendDeleteFileMessage(String fileName)
         throws IOException, GeneralSecurityException {
+        checkKeyExpiration();
+
         log.info("SEND DELETE MESSAGE");
         writeBytes((DELETE_MESSAGE + " " + fileName).getBytes());
         log.info("DELETE FILE BY NAME: " + fileName);
@@ -110,6 +116,8 @@ public class Client {
 
     public byte[] sendRequestForFileMessage(String fileName)
         throws IOException, GeneralSecurityException {
+        checkKeyExpiration();
+
         log.info("SEND REQUEST MESSAGE");
         byte[] bytes = null;
         writeBytes((REQUEST_MESSAGE + " " + fileName).getBytes());
@@ -128,6 +136,8 @@ public class Client {
 
     public void sendSaveAsMessage(String fileName, byte[] bytes)
         throws IOException, GeneralSecurityException {
+        checkKeyExpiration();
+
         log.info("SEND SAVE AS MESSAGE");
         writeBytes((SAVE_MESSAGE + " " + fileName).getBytes());
         log.info("SAVE FILE AS: " + fileName);
@@ -202,4 +212,13 @@ public class Client {
     private boolean isConnectionSecured() {
         return serpentScrambler != null;
     }
+
+    private void checkKeyExpiration() throws IOException, GeneralSecurityException {
+        log.info("CHECK EXPIRATION");
+        if(serpentScrambler.isKeyExpired()){
+            log.info("KEY IS EXPIRED");
+            sendGenerateMessage();
+        }
+    }
+
 }
