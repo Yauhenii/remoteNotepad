@@ -21,14 +21,14 @@ public class FileNameDialog extends JDialog {
     private MainWindow owner;
 
     public FileNameDialog(MainWindow owner) {
-        super(owner,true);
-        this.owner=owner;
+        super(owner, true);
+        this.owner = owner;
 
-        mainPanel=new JPanel(new GridLayout(2,2));
-        fileNameLabel=new JLabel("File name ");
-        fileNameField=new JTextField();
-        acceptButton=new JButton("Accept");
-        cancelButton=new JButton("Cancel");
+        mainPanel = new JPanel(new GridLayout(2, 2));
+        fileNameLabel = new JLabel("File name ");
+        fileNameField = new JTextField();
+        acceptButton = new JButton("Accept");
+        cancelButton = new JButton("Cancel");
 
         addComponents();
         addListeners();
@@ -37,11 +37,7 @@ public class FileNameDialog extends JDialog {
     }
 
     private void configureComponents() {
-//        fileNameLabel.setFont(WindowConfig.getFileNameDialogTextFont());
-//        fileNameField.setFont(WindowConfig.getFileNameDialogTextFont());
-//        acceptButton.setFont(WindowConfig.getFileNameDialogTextFont());
-//        cancelButton.setFont(WindowConfig.getFileNameDialogTextFont());
-
+        fileNameLabel.setHorizontalAlignment(JLabel.CENTER);
     }
 
     private void addListeners() {
@@ -66,7 +62,8 @@ public class FileNameDialog extends JDialog {
         setTitle("File name dialog");
 //        setIconImage(ResourceLoader.getImage("icon/order-info.png"));
         setContentPane(mainPanel);
-        setPreferredSize(new Dimension(400, 200));
+        setPreferredSize(new Dimension(WindowConfig.getFileNameDialogScreenWidth(),
+            WindowConfig.getFileNameDialogScreenHeight()));
         setResizable(false);
         pack();
     }

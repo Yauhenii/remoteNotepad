@@ -62,7 +62,7 @@ public class Client {
 
     }
 
-    public void sendGenerateMessage() throws IOException, GeneralSecurityException{
+    public void sendGenerateMessage() throws IOException, GeneralSecurityException {
         log.info("SEND GENERATE NEW SESSION KEY MESSAGE");
         writeBytes(generateMessage.getBytes());
         serpentScrambler = null;
@@ -113,12 +113,14 @@ public class Client {
     public void stop() {
         try {
             clientSocket.close();
+            inputStream.close();
+            outputStream.close();
         } catch (IOException exception) {
             System.out.println(exception.getMessage());
         }
     }
 
-    public Key getSessionKey(){
+    public Key getSessionKey() {
         return serpentScrambler.getKey();
     }
 

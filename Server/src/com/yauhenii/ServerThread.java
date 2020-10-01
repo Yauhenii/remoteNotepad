@@ -12,6 +12,8 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class ServerThread extends Thread {
@@ -20,7 +22,6 @@ public class ServerThread extends Thread {
     private final static String endMessage = "exit";
     private final static String requestMessage = "request";
     private final static String saveMessage = "save";
-    private final static String echoMessage = "echo";
     private final static String acceptMessage = "accept";
     private final static String denyMessage = "deny";
     private final static String generateMessage = "generate";
@@ -33,7 +34,9 @@ public class ServerThread extends Thread {
     private OutputStream outputStream;
 
     private RSAScrambler rsaScrambler;
-    SerpentScrambler serpentScrambler;
+    private SerpentScrambler serpentScrambler;
+
+    private Map<String, Command> messagesMap;
 
     private static Logger log = Logger.getLogger(Server.class.getName());
 
@@ -46,10 +49,39 @@ public class ServerThread extends Thread {
         rsaScrambler = null;
         serpentScrambler = null;
 
+        messagesMap = new HashMap<>();
+
+        messagesMap.put(endMessage, string -> {
+            try {
+                receiveEndMessage();
+            } catch (Exception exception) {
+                log.warning(exception.getMessage());
+            }
+        });
+        messagesMap.put(requestMessage, string -> {
+            try {
+                receiveRequestMessage(string);
+            } catch (Exception exception) {
+                log.warning(exception.getMessage());
+            }
+        });
+        messagesMap.put(saveMessage, string -> {
+            try {
+                receiveSaveMessage(string);
+            } catch (Exception exception) {
+                log.warning(exception.getMessage());
+            }
+        });
+        messagesMap.put(generateMessage, message -> {
+            try {
+                receiveGenerateMessage();
+            } catch (Exception exception) {
+                log.warning(exception.getMessage());
+            }
+        });
+
         start();
     }
-
-    // TODO: 9/24/20 Rewrite if/else if to map
 
     @Override
     public void run() {
@@ -58,9 +90,9 @@ public class ServerThread extends Thread {
             byte[] bytes;
             String command;
             String[] commandSplit;
-            //Get public key
+
             receivePublicKey();
-            //Send symmetric key
+
             sendSessionKey();
 
             while (true) {
@@ -68,56 +100,68 @@ public class ServerThread extends Thread {
                 command = new String(bytes);
                 commandSplit = command.split(" ");
 
-                if (commandSplit[0].equals(endMessage)) {
-                    log.info(clientAddress + ": CONNECTION ABORTED");
-                    stopClient();
-                    break;
-                } else if (commandSplit[0].equals(requestMessage)) {
-                    String fileName = commandSplit[1];
-                    log.info(clientAddress + ": GOT REQUEST FOR FILE " + fileName);
-                    try {
-                        bytes = readBytesFromFile(fileName);
-                        log.info(clientAddress + ": SENDING ACCEPT MESSAGE... " + fileName);
-                        writeBytes(acceptMessage.getBytes());
-                        log.info(clientAddress + ": SENDING FILE... " + fileName);
-                        writeBytes(bytes);
-                        log.info(clientAddress + ": FILE SENT " + fileName);
-                    } catch (IOException exception) {
-                        log.info(clientAddress + ": SENDING DENY MESSAGE... " + fileName);
-                        writeBytes(denyMessage.getBytes());
-                        log.info(clientAddress + ": FILE IS NOT FOUND " + fileName);
-                    }
-
-                } else if (commandSplit[0].equals(echoMessage)) {
-                    String message = commandSplit[1];
-                    log.info(clientAddress + ": GOT ECHO MESSAGE ");
-                    writeBytes(message.getBytes());
-                    log.info(clientAddress + ": SENT ECHO MESSAGE BACK");
-                } else if (commandSplit[0].equals(saveMessage)) {
-                    String fileName = commandSplit[1];
-                    log.info(clientAddress + ": GOT REQUEST FOR FILE SAVING " + fileName);
-                    try {
-                        log.info(clientAddress + ": SENDING ACCEPT MESSAGE... " + fileName);
-                        writeBytes(acceptMessage.getBytes());
-                        bytes = readBytes();
-                        writeBytesToFile(bytes, fileName);
-                    } catch (IOException exception) {
-                        log.info(clientAddress + ": SENDING DENY MESSAGE... " + fileName);
-                    }
-
-                } else if (commandSplit[0].equals(generateMessage)) {
-                    log.info(clientAddress + ": GET GENERATE MESSAGE");
-                    serpentScrambler = null;
-                    sendSessionKey();
+                if (commandSplit.length > 1) {
+                    messagesMap.get(commandSplit[0]).execute(commandSplit[1]);
                 } else {
-                    log.info(clientAddress + ": INVALID COMMAND");
+                    messagesMap.get(commandSplit[0]).execute(null);
                 }
+
             }
         } catch (
             Exception exception) {
-            log.warning(exception.getMessage());
+            log.warning(clientAddress + ": CONNECTION IS CLOSED");
         }
 
+    }
+
+    public void receiveEndMessage() {
+        log.info(clientAddress + ": CONNECTION ABORTED");
+        stopClient();
+    }
+
+    public void receiveRequestMessage(String fileName)
+        throws IOException, GeneralSecurityException {
+        byte[] bytes;
+        log.info(clientAddress + ": GOT REQUEST FOR FILE " + fileName);
+        try {
+            bytes = readBytesFromFile(fileName);
+            log.info(clientAddress + ": SENDING ACCEPT MESSAGE... " + fileName);
+            writeBytes(acceptMessage.getBytes());
+            log.info(clientAddress + ": SENDING FILE... " + fileName);
+            writeBytes(bytes);
+            log.info(clientAddress + ": FILE SENT " + fileName);
+        } catch (IOException exception) {
+            log.info(clientAddress + ": SENDING DENY MESSAGE... " + fileName);
+            writeBytes(denyMessage.getBytes());
+            log.info(clientAddress + ": FILE IS NOT FOUND " + fileName);
+        }
+    }
+
+    public void receiveSaveMessage(String fileName) throws IOException, GeneralSecurityException {
+        byte[] bytes;
+        log.info(clientAddress + ": GOT REQUEST FOR FILE SAVING " + fileName);
+        try {
+            log.info(clientAddress + ": SENDING ACCEPT MESSAGE... " + fileName);
+            writeBytes(acceptMessage.getBytes());
+            bytes = readBytes();
+            writeBytesToFile(bytes, fileName);
+        } catch (IOException exception) {
+            log.info(clientAddress + ": SENDING DENY MESSAGE... " + fileName);
+        }
+    }
+
+    public void receiveGenerateMessage() throws IOException, GeneralSecurityException {
+        log.info(clientAddress + ": GET GENERATE MESSAGE");
+        serpentScrambler = null;
+        sendSessionKey();
+    }
+
+    public void stopClient() {
+        try {
+            clientSocket.close();
+        } catch (IOException exception) {
+            log.info(exception.getMessage());
+        }
     }
 
     private void sendSessionKey() throws IOException, GeneralSecurityException {
@@ -185,14 +229,6 @@ public class ServerThread extends Thread {
         bufferedOutputStream.flush();
     }
 
-    public void stopClient() {
-        try {
-            clientSocket.close();
-        } catch (IOException exception) {
-            log.info(exception.getMessage());
-        }
-    }
-
     private boolean isConnectionSecured() {
         if (serpentScrambler != null) {
             return true;
@@ -201,4 +237,3 @@ public class ServerThread extends Thread {
         }
     }
 }
-

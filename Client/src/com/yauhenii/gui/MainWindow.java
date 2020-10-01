@@ -2,6 +2,7 @@ package com.yauhenii.gui;
 
 import com.yauhenii.Client;
 import java.awt.BorderLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -36,9 +37,9 @@ public class MainWindow extends JFrame {
 
     JTextArea mainTextArea;
 
-    private JLabel usernameLabel;
-
-    private JTextField usernameTextField;
+//    private JLabel usernameLabel;
+//
+//    private JTextField usernameTextField;
 
     private JMenuBar menuBar;
     private JMenu fileMenu;
@@ -55,12 +56,12 @@ public class MainWindow extends JFrame {
         //client
         this.client = client;
         //authPanel
-//        authPanel = new JPanel(new GridLayout(2, 2, 1, 0));
-//        enterButton = new JButton("Enter bar");
-//        exitButton = new JButton("Exit");
+        authPanel = new JPanel(new GridLayout(2, 1));
+        enterButton = new JButton("Log in");
+        exitButton = new JButton("Exit");
 //        usernameLabel = new JLabel("Username");
 //        usernameTextField = new JTextField();
-//        addComponentsToAuthPanel();
+        addComponentsToAuthPanel();
 //        configureAuthPanelComponents();
         //mainPanel
         mainPanel = new JPanel(new BorderLayout());
@@ -84,12 +85,12 @@ public class MainWindow extends JFrame {
         setWindowPreferences();
     }
 
-//    private void addComponentsToAuthPanel() {
+    private void addComponentsToAuthPanel() {
 //        authPanel.add(usernameLabel);
 //        authPanel.add(usernameTextField);
-//        authPanel.add(exitButton);
-//        authPanel.add(enterButton);
-//    }
+        authPanel.add(enterButton);
+        authPanel.add(exitButton);
+    }
 //
 //    private void configureAuthPanelComponents() {
 //        usernameLabel.setFont(WindowConfig.getTextFont());
@@ -112,25 +113,25 @@ public class MainWindow extends JFrame {
         setResizable(false);
     }
 
-//    private void showAuthPanel() {
-//        setTitle("Who are you?");
+    private void showAuthPanel() {
+        setTitle("Log in");
 //        setIconImage(ResourceLoader.getImage("icon/who-are-you.png"));
-//
+
 //        clientId = null;
 //        clientName = null;
 //        orderTableModel.removeAllRows();
 //        usernameButton.setText("");
-//
-//        JComponent contentPane = (JPanel) MainWindow.this.getContentPane();
-//        contentPane.removeAll();
-//        contentPane.setLayout(new BorderLayout());
-//        contentPane.add(authPanel, BorderLayout.CENTER);
-//        contentPane.revalidate();
-//        contentPane.repaint();
-//
-//        menuBar.setVisible(false);
-//        setBounds(0, 0, WindowConfig.getAuthScreenWidth(), WindowConfig.getAuthScreenHeight());
-//    }
+
+        JComponent contentPane = (JPanel) MainWindow.this.getContentPane();
+        contentPane.removeAll();
+        contentPane.setLayout(new BorderLayout());
+        contentPane.add(authPanel, BorderLayout.CENTER);
+        contentPane.revalidate();
+        contentPane.repaint();
+
+        menuBar.setVisible(false);
+        setBounds(0, 0, WindowConfig.getAuthScreenWidth(), WindowConfig.getAuthScreenHeight());
+    }
 
     private void showMainPanel() {
         setTitle("Client app");
@@ -193,22 +194,21 @@ public class MainWindow extends JFrame {
             }
         });
         saveAsItem.addActionListener(e -> {
-            if(mainTextArea.getText()!=""){
+            if (!mainTextArea.getText().trim().equals("")) {
                 try {
                     FileNameDialog fileNameDialog = new FileNameDialog(MainWindow.this);
                     fileNameDialog.setVisible(true);
-                    System.out.println("LOL");
                     if (currentFileName != null) {
                         byte[] bytes = mainTextArea.getText().getBytes();
                         client.sendSaveAsMessage(currentFileName, bytes);
-                    } else {
-                        JOptionPane.showMessageDialog(MainWindow.this,
-                            "No file name", "Warning", JOptionPane.WARNING_MESSAGE);
                     }
                 } catch (Exception exception) {
                     JOptionPane.showMessageDialog(MainWindow.this,
                         "File is not found", "Warning", JOptionPane.WARNING_MESSAGE);
                 }
+            } else {
+                JOptionPane.showMessageDialog(MainWindow.this,
+                    "File is empty", "Warning", JOptionPane.WARNING_MESSAGE);
             }
         });
         logOutItem.addActionListener(e -> {
@@ -224,7 +224,7 @@ public class MainWindow extends JFrame {
         newItem.addActionListener(e -> {
             Object[] options = {"Cancel", "No", "Yes"};
             int option;
-            if (mainTextArea.getText() != "") {
+            if (!mainTextArea.getText().trim().equals("")) {
                 option = JOptionPane.showOptionDialog(MainWindow.this,
                     "Do you want to save your work?",
                     "New file",
@@ -253,6 +253,12 @@ public class MainWindow extends JFrame {
         });
         showKeyItem.addActionListener(e -> JOptionPane.showMessageDialog(MainWindow.this,
             client.getSessionKey(), "Info", JOptionPane.INFORMATION_MESSAGE));
+        enterButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showMainPanel();
+            }
+        });
     }
 
 //    public void setCurrentFileName(String currentFileName) {

@@ -5,9 +5,10 @@ import java.awt.Font;
 import lombok.Getter;
 
 public class WindowConfig {
+
     private static final int MAC_OS_X = 0;
     private static final int WINDOWS = 1;
-//
+    //
     //main window
 //    private static final Font[] HEADER_FONT = new Font[]{new Font("Serif", Font.PLAIN, 30),
 //        new Font("Serif", Font.PLAIN, 30)};
@@ -23,11 +24,11 @@ public class WindowConfig {
     private static final Font[] INFO_DIALOG_TEXT_FONT = new Font[]{
         new Font("Serif", Font.PLAIN, 15), new Font("Serif", Font.PLAIN, 15)
     };
-    private static final int[] FILE_NAME_DIALOG_SCREEN_WIDTH = {400, 600};
-    private static final int[] FILE_NAME_DIALOG_SCREEN_HEIGHT = {200, 300};
-//
+    private static final int[] FILE_NAME_DIALOG_SCREEN_WIDTH = {170, 300};
+    private static final int[] FILE_NAME_DIALOG_SCREEN_HEIGHT = {100, 300};
+    //
     private static final int sys;
-//    @Getter
+    //    @Getter
 //    private static final Font headerFont;
 //    @Getter
 //    private static final Font textFont;
@@ -41,15 +42,16 @@ public class WindowConfig {
     private static final int authScreenWidth;
     @Getter
     private static final int authScreenHeight;
-//    @Getter
+    //    @Getter
 //    private static final Font infoDialogHeaderFont;
 //    @Getter
 //    private static final Font fileNameDialogTextFont;
-//    @Getter
-//    private static final int infoDialogScreenWidth;
-//    @Getter
-//    private static final int infoDialogScreenHeight;
-//
+    @Getter
+    private static final int fileNameDialogScreenWidth;
+    @Getter
+    private static final int fileNameDialogScreenHeight;
+
+    //
 //
     static {
         if (System.getProperty("os.name").equals("Mac OS X")) {
@@ -64,8 +66,8 @@ public class WindowConfig {
         screenHeight = SCREEN_HEIGHT[sys];
 //        infoDialogHeaderFont = INFO_DIALOG_HEADER_FONT[sys];
 //        infoDialogTextFontFont = INFO_DIALOG_TEXT_FONT[sys];
-//        infoDialogScreenWidth = INFO_DIALOG_SCREEN_WIDTH[sys];
-//        infoDialogScreenHeight = INFO_DIALOG_SCREEN_HEIGHT[sys];
+        fileNameDialogScreenWidth = FILE_NAME_DIALOG_SCREEN_WIDTH[sys];
+        fileNameDialogScreenHeight = FILE_NAME_DIALOG_SCREEN_HEIGHT[sys];
 
         authScreenWidth = screenWidth / 4;
         authScreenHeight = screenHeight / 7;
